@@ -1,0 +1,36 @@
+# Secrets & local config
+.env
+*.local
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Node / frontend
+node_modules/
+frontend/dist/
+
+# Runtime data (databases, uploads, generated reports) — may contain real AD data
+data/
+*.db
+*.db-wal
+*.db-shm
+reports_out/
+
+# Real collection data must never be committed; only synthetic samples in sample_data/
+*.bloodhound.zip
+uploads/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.tsbuildinfo

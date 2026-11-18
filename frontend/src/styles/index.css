@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+/* AEGIS design tokens — charcoal surfaces, restrained blue/cyan accents. */
+@theme {
+  --color-surface-0: #0b0d10;
+  --color-surface-1: #111419;
+  --color-surface-2: #171b22;
+  --color-surface-3: #1f2530;
+  --color-border: #262d39;
+  --color-text: #e3e8ef;
+  --color-muted: #8b95a5;
+  --color-accent: #3b82f6;
+  --color-accent-2: #22b8cf;
+  --color-sev-critical: #e5484d;
+  --color-sev-high: #f76b15;
+  --color-sev-medium: #f5c24c;
+  --color-sev-low: #4cc38a;
+  --font-sans: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+}
+
+html, body, #root { height: 100%; }
+body { background: var(--color-surface-0); color: var(--color-text); font-family: var(--font-sans); }

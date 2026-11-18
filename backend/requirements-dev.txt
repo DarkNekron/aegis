@@ -1,0 +1,19 @@
+# AEGIS backend — development & test dependencies (in addition to runtime).
+-r requirements.txt
+
+# --- Direct dev dependencies ---
+pytest==9.2.0
+pytest-cov==7.1.0
+httpx2==2.16.2        # required by starlette/fastapi TestClient (successor of httpx)
+ruff==0.17.5
+watchfiles==1.3.0     # only for `uvicorn --reload` during backend development
+
+# --- Transitive ---
+colorama==0.4.6
+coverage==7.17.3
+httpcore2==2.16.2
+iniconfig==2.3.1
+packaging==26.3
+pluggy==1.7.0
+Pygments==2.21.0
+truststore==0.10.5
