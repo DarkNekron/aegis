@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="AEGIS_",
         env_file=REPO_ROOT / ".env",
-        env_file_encoding="utf-8",
+        env_file_encoding="utf-8-sig",  # tolerate a BOM (PowerShell 5.1 writes one)
         extra="ignore",
         validate_default=True,
     )

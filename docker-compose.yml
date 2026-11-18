@@ -1,0 +1,31 @@
+# Optional container deployment. Written and reviewed but NOT run on the development machine (no Docker there).
+# Requires a .env in the repository root with AEGIS_SECRET_KEY set (scripts/setup.ps1 creates one).
+#
+#   docker compose up --build -d
+#   docker compose exec aegis python -m app.cli create-user admin --role admin
+name: aegis
+services:
+  aegis:
+    build:
+      context: .
+      dockerfile: deployment/Dockerfile
+    env_file: .env
+    environment:
+      AEGIS_ENV: production
+      AEGIS_HOST: 0.0.0.0
+      AEGIS_DATA_DIR: /data
+    ports:
+      - "127.0.0.1:8000:8000"   # published on loopback only; put a TLS reverse proxy in front for remote use
+    volumes:
+      - aegis-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 2g               # matches the single-analyst sizing in docs/SYSTEM_ASSESSMENT.md
+    cpus: 2
+    restart: unless-stopped
+volumes:
+  aegis-data:
