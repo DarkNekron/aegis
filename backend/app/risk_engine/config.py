@@ -35,6 +35,7 @@ class RiskConfig(BaseModel):
     conditional_factor: float = Field(0.7, ge=0, le=1)       # exploitability of a conditional path
     exposure_saturation: int = Field(100, ge=1)              # sources reaching a target for exposure = 1.0
     alternatives_saturation: int = Field(5, ge=2)            # routes per identity for alternatives = 1.0
+    environment_mass_saturation: float = Field(10.0, gt=0)   # identity-equivalents for full exposure mass
     bands: dict[str, float] = Field(default_factory=lambda: {"Critical": 80.0, "High": 60.0, "Medium": 40.0})
     conditional_max_severity: str = "High"                   # unvalidated conditional paths are capped here
     asset_criticality: dict[str, float] = Field(default_factory=dict)  # object_id -> 0..1 business criticality

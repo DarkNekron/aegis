@@ -55,3 +55,9 @@ cycles, so collection is paused during bulk construction (`gc_paused()` in `algo
 the graph builder). Index build went from 2.16 s to 0.62 s and graph build from 2.82 s to 0.67 s, with unchanged
 memory and no growth across repeated builds. The searches themselves (reverse Dijkstra, Yen, Edmonds–Karp,
 Brandes) take under 10 ms combined on this dataset.
+
+## Remediation simulation
+
+| Date | Dataset | Simulation | Time (baseline + what-if, both scored) | Outcome |
+|---|---|---|---|---|
+| 2026-11-18 | 20k-user corp-medium (27,638 nodes / 114,481 edges) | `apply_min_cut` | **0.54 s** | 33 → 0 paths; environment risk 74.38 → 0; 24 relationships removed |

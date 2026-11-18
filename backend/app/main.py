@@ -29,6 +29,7 @@ from app.ingestion.service import ImportService
 from app.security.rate_limit import RateLimiter
 from app.security.sessions import SessionManager
 from app.services.analysis_service import AnalysisService
+from app.services.simulation_service import SimulationService
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +52,7 @@ def create_app(settings: Settings | None = None, *, resources: ResourceManager |
         app.state.graphs = GraphService(db, rm, GraphCache(settings.graph_cache_size))
         app.state.imports = ImportService(db, settings, rm)
         app.state.analyses = AnalysisService(db, settings, app.state.graphs)
+        app.state.simulations = SimulationService(db, app.state.graphs)
         app.state.sessions = SessionManager(settings)
         app.state.rate_limiter = RateLimiter()
         app.state.started_monotonic = time.monotonic()

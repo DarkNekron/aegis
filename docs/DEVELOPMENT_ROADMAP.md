@@ -17,7 +17,7 @@ Status legend: ✅ done · 🔄 in progress · ⏳ pending
 | 3.5 | Module 4 — Risk engine | scoring model, configurable weights, `RISK_SCORING.md` | Deterministic score tests | ✅ worked example exact (81.90); analyses and paths persisted |
 | 5.1 | HTTP API | snapshots, streaming uploads, import/analysis jobs, paths, evidence, graph views, settings, dashboard | API tests + live run | ✅ 15 API tests; live curl run on corp-medium (33/33 exposed, 130 MB) |
 | 5.0 | Security layer | auth, sessions, CSRF, RBAC, rate limit, audit log, headers | AuthN/AuthZ tests per role | ✅ 31 security tests; docs/SECURITY.md |
-| 3.6 | Module 6 — Simulation | view-based what-if, all action types | Original graph unchanged (tested) | ⏳ |
+| 3.6 | Module 6 — Simulation | view-based what-if, all action types | Original graph unchanged (tested) | ✅ ground-truth simulations; monotonicity property; 0.54 s at 20k users |
 | 3.7 | Module 7 — Comparison | object/edge/path diffs, change report | Diff tests across two snapshots | ⏳ |
 | 3.8 | Module 8 — Reporting | HTML, PDF and JSON with all 13 sections | Reports generate from sample data | ⏳ |
 | 4 | Frontend + Module 5 | 10 pages, Cytoscape explorer, filtering and incremental expansion | `tsc`, build, manual walkthrough | ⏳ |
@@ -77,3 +77,11 @@ from the moment it exists.
 * A live run against Uvicorn with curl (real cookies, CSRF, upload, jobs, dashboard) matched the corp-medium ground
   truth.
 * Next: 3.6 remediation simulation, 3.7 historical comparison, 3.8 reporting, then the frontend.
+
+**3.6 Remediation simulation (done 2026-11-18)**
+* The action types are remove_relationship, remove_step, remove_membership, remove_acl, remove_admin, remove_session,
+  disable_identity and apply_min_cut. The baseline and the what-if are computed on the same graph with the same
+  parameters.
+* The simulation tests exposed a non-monotone environment metric: it used the mean of identity scores, which went up
+  after remediation. It was replaced by a capped exposure mass, documented in RISK_SCORING.md §4, and a property test
+  now guards it.

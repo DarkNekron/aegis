@@ -142,7 +142,7 @@ def test_dashboard_is_computed_from_data(analysed):
                              d["findings"]["high_risk_relationships"], "unresolved_findings": 8,
                              "exposed_identities": 6}
     assert d["findings"]["high_risk_relationships"] > 0
-    assert d["analysis"]["environment_risk"]["score"] == pytest.approx(84.17, abs=0.01)
+    assert d["analysis"]["environment_risk"]["score"] == pytest.approx(74.88, abs=0.01)
 
 
 def test_dashboard_without_data(viewer_client):

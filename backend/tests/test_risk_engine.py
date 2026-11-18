@@ -191,7 +191,7 @@ def test_analysis_is_persisted_with_scored_paths(env, analyses):
     summary = analysis.summary
     assert summary["paths_total"] == 8 and summary["exposed_sources"] == 6
     assert summary["paths_by_severity"] == {"Critical": 2, "High": 6, "Medium": 0, "Low": 0}
-    assert summary["environment_risk"]["score"] == pytest.approx(84.17, abs=0.01)
+    assert summary["environment_risk"]["score"] == pytest.approx(74.88, abs=0.01)
     cut = sorted([c["src"]["name"], c["kinds"][0], c["dst"]["name"]] for c in summary["min_cut"]["steps"])
     assert cut == truth["min_cut"]["edges"]
     assert summary["choke_points"][0]["paths"] == 3

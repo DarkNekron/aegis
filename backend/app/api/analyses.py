@@ -16,6 +16,7 @@ from app.graph_engine.analysis import AnalysisParams
 from app.models import AdEdge, AdObject, Analysis, AttackPath, Snapshot
 from app.security.audit import audit
 from app.security.deps import client_ip
+from app.simulation.engine import SimulationRequest
 
 router = APIRouter(prefix="/api", tags=["analysis"])
 
@@ -205,3 +206,47 @@ def path_graph(path_id: int, viewer: Viewer) -> dict:
         "edges": [{"data": {"id": f"s{i}", "source": str(s["src"]), "target": str(s["dst"]), "kind": s["kind"],
                             "traversable": True, "conditional": s["conditional"], "step": i + 1,
                             "alternatives": s["alternatives"]}} for i, s in enumerate(details.get("steps", []))]}}
+
+
+# ------------------------------------------------------------------ remediation simulation
+@router.post("/analyses/{analysis_id}/simulations", status_code=202)
+def start_simulation(analysis_id: int, body: SimulationRequest, request: Request, analyst: Analyst) -> dict:
+    """What-if remediation against an analysis. Runs as a heavy job; never modifies real data."""
+    state = request.app.state
+    baseline = state.simulations.baseline(analysis_id)  # 404/422 immediately, before queueing
+    stats = (analyst.db.get(Snapshot, baseline.snapshot_id).stats or {})
+    estimate = state.resources.estimate_graph_memory_mb(stats.get("objects_total", 0),
+                                                        stats.get("relationships_total", 0))
+    user_id = analyst.user.id
+
+    def run(ctx: JobContext) -> dict:
+        return {"simulation_id": state.simulations.run(analysis_id, body, token=ctx.token, created_by=user_id)}
+
+    job = state.jobs.submit(f"Simulate remediation on analysis {analysis_id}", run, kind=JobKind.HEAVY,
+                            estimated_memory_mb=estimate)
+    audit(analyst.db, "simulation_submit", "success", user_id=analyst.user.id, username=analyst.user.username,
+          target_type="analysis", target_id=analysis_id, ip=client_ip(request),
+          detail={"job": job.id, "actions": len(body.actions)})
+    return {"job": job.public_view()}
+
+
+def _simulation_view(sim, *, full: bool = False) -> dict:
+    result = sim.result or {}
+    view = {"id": sim.id, "analysis_id": sim.analysis_id, "created_at": iso(sim.created_at), "actions": sim.actions,
+            "paths_before": result.get("paths_before"), "paths_after": result.get("paths_after"),
+            "environment_risk_change": result.get("environment_risk_change")}
+    if full:
+        view["result"] = result
+    return view
+
+
+@router.get("/analyses/{analysis_id}/simulations")
+def list_simulations(analysis_id: int, request: Request, viewer: Viewer, offset: Offset = 0,
+                     limit: Limit = 50) -> dict:
+    total, rows = request.app.state.simulations.list(analysis_id, offset=offset, limit=limit)
+    return {"total": total, "items": [_simulation_view(s) for s in rows]}
+
+
+@router.get("/simulations/{simulation_id}")
+def get_simulation(simulation_id: int, request: Request, viewer: Viewer) -> dict:
+    return _simulation_view(request.app.state.simulations.get(simulation_id), full=True)

@@ -121,20 +121,27 @@ class RiskScorer:
         return scores
 
     def environment_risk(self, result: AnalysisResult, scores: dict[str, PathScore]) -> dict[str, Any]:
-        """Overall exposure, 0-100: 50% worst path, 30% mean of each exposed identity's worst path, 20% breadth."""
+        """Overall exposure, 0-100: 50% worst path, 30% exposure mass, 20% breadth.
+
+        Every component is monotone: removing relationships or exposed identities can never raise it,
+        which is essential for comparing remediation simulations. (An earlier design used the *mean*
+        identity score, which rose when low-scoring identities were secured.)
+        """
         if not result.paths:
-            return {"score": 0.0, "severity": "Low", "components": {"worst_path": 0.0, "mean_identity": 0.0,
-                                                                     "breadth": 0.0}}
+            return {"score": 0.0, "severity": "Low",
+                    "components": {"worst_path": 0.0, "exposure_mass": 0.0, "breadth": 0.0, "exposed_fraction": 0.0},
+                    "paths_by_severity": dict.fromkeys(SEVERITIES, 0)}
         best_per_source: dict[int, float] = {}
         for p in result.paths:
             best_per_source[p.source] = max(best_per_source.get(p.source, 0.0), scores[p.signature].score)
         worst = max(best_per_source.values())
-        mean = sum(best_per_source.values()) / len(best_per_source)
+        mass = 100.0 * min(1.0, sum(v / 100.0 for v in best_per_source.values())
+                           / self.config.environment_mass_saturation)
         fraction = len(best_per_source) / max(1, result.sources_total)
         breadth = 100.0 * min(1.0, fraction / 0.05)  # 5% of identities exposed counts as fully broad
-        score = round(0.5 * worst + 0.3 * mean + 0.2 * breadth, 2)
+        score = round(0.5 * worst + 0.3 * mass + 0.2 * breadth, 2)
         severity_counts = Counter(s.severity for s in scores.values())
         return {"score": score, "severity": self.band(score),
-                "components": {"worst_path": round(worst, 2), "mean_identity": round(mean, 2),
+                "components": {"worst_path": round(worst, 2), "exposure_mass": round(mass, 2),
                                "breadth": round(breadth, 2), "exposed_fraction": round(fraction, 4)},
                 "paths_by_severity": {s: severity_counts.get(s, 0) for s in SEVERITIES}}

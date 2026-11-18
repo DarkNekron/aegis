@@ -76,12 +76,24 @@ Across the corp-small dataset the model produces 2 Critical paths (the two uncon
 
 ```
 environment = 0.5 × worst path score
-            + 0.3 × mean over exposed identities of each identity's worst path score
-            + 0.2 × breadth,   breadth = 100 × min(1, exposed identities / all starting identities / 0.05)
+            + 0.3 × exposure mass,  mass    = 100 × min(1, Σ over exposed identities of (worst path score / 100)
+                                                       / environment_mass_saturation)       saturation = 10
+            + 0.2 × breadth,        breadth = 100 × min(1, exposed identities / all starting identities / 0.05)
 ```
-The worst path captures the immediate danger, the mean captures how widespread serious exposure is, and breadth
-reaches its maximum once 5% of identities can reach tier-0. corp-small scores 84.17:
-0.5 × 81.90 + 0.3 × 77.39 + 0.2 × 100. The components are stored with the analysis.
+* The **worst path** captures the immediate danger.
+* The **exposure mass** grows with both the number of exposed identities and how bad their paths are. Ten identities
+  that each have a 100-point path saturate it.
+* **Breadth** reaches its maximum once 5% of identities can reach tier-0.
+
+corp-small scores **74.88**: 0.5 × 81.90 + 0.3 × 46.43 + 0.2 × 100. The components are stored with each analysis.
+
+**Monotonicity requirement.** Remediating something must never make the environment score go up, or remediation
+simulations would be misleading. An earlier version used the *mean* of exposed identities' worst scores. The
+simulation tests caught that securing two low-scoring identities raised the mean, and with it the overall score,
+from 84.17 to 84.97. Every component is now a maximum, a capped sum or a capped count, all of which can only fall
+when relationships or identities are removed. The test
+`test_environment_risk_never_increases_when_any_relationship_is_removed` removes each traversable relationship of
+corp-small in turn and checks this property.
 
 ## 5. Configuration reference (`risk_config`)
 
@@ -94,6 +106,7 @@ reaches its maximum once 5% of identities can reach tier-0. corp-small scores 84
 | `conditional_factor` | 0.7 | [0, 1] |
 | `exposure_saturation` | 100 | ≥ 1 |
 | `alternatives_saturation` | 5 | ≥ 2 |
+| `environment_mass_saturation` | 10 | > 0 |
 | `bands` | Critical 80, High 60, Medium 40 | 100 ≥ Critical > High > Medium > 0 |
 | `conditional_max_severity` | High | one of Critical, High, Medium, Low |
 | `asset_criticality` | {} | object_id → [0, 1] |
