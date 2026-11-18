@@ -23,6 +23,8 @@ from app.core.logging import configure_logging
 from app.core.middleware import RequestContextMiddleware, install_error_handlers
 from app.core.resources import ResourceManager
 from app.db.session import Database
+from app.graph_engine.cache import GraphCache
+from app.graph_engine.service import GraphService
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +44,7 @@ def create_app(settings: Settings | None = None, *, resources: ResourceManager |
         app.state.db = db
         app.state.resources = rm
         app.state.jobs = JobRunner(settings, rm)
+        app.state.graphs = GraphService(db, rm, GraphCache(settings.graph_cache_size))
         app.state.started_monotonic = time.monotonic()
         logger.info("AEGIS %s started (%s, db=%s)", __version__, settings.env,
                     "sqlite" if settings.is_sqlite else "external")
@@ -49,6 +52,7 @@ def create_app(settings: Settings | None = None, *, resources: ResourceManager |
             yield
         finally:
             app.state.jobs.shutdown(wait=True)
+            app.state.graphs.cache.invalidate()
             db.dispose()
             logger.info("AEGIS stopped")
 

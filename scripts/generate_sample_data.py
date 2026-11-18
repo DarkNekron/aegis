@@ -32,8 +32,10 @@ NOTE = "AEGIS synthetic sample data"
 CONVENTIONS = {
     "tier0_seeds": [
         "the domain object", "domain controllers (isdc, or members of DOMAIN CONTROLLERS)",
-        "groups RID 512 Domain Admins, 516 Domain Controllers, 518 Schema Admins, 519 Enterprise Admins",
-        "BUILTIN 544 Administrators, 548 Account Operators, 549 Server Operators, 551 Backup Operators",
+        "groups RID 512 Domain Admins, 516 Domain Controllers, 518 Schema Admins, 519 Enterprise Admins, "
+        "526 Key Admins, 527 Enterprise Key Admins",
+        "BUILTIN 544 Administrators, 548 Account Operators, 549 Server Operators, 550 Print Operators, "
+        "551 Backup Operators",
         "users RID 500 Administrator and 502 krbtgt",
     ],
     "tier0_dcsync": "a principal holding BOTH GetChanges and GetChangesAll on the domain is tier-0",
@@ -44,7 +46,7 @@ CONVENTIONS = {
         "MemberOf", "AdminTo", "HasSession", "GenericAll", "GenericWrite", "WriteDacl", "WriteOwner", "Owns",
         "AddMember", "AddSelf", "ForceChangePassword", "AllExtendedRights", "AddKeyCredentialLink",
         "ReadLAPSPassword", "ReadGMSAPassword", "AllowedToAct", "AddAllowedToAct", "AllowedToDelegate",
-        "HasSIDHistory", "Contains", "GPLink", "DCSync",
+        "HasSIDHistory", "Contains", "GPLink", "DCSync", "WriteSPN", "WriteAccountRestrictions",
     ],
     "not_traversable": {
         "CanRDP / CanPSRemote / ExecuteDCOM": "user-level logon only; harvesting credentials from sessions needs "
@@ -56,8 +58,10 @@ CONVENTIONS = {
     "classification": {
         "potential_privilege_escalation": "every edge is unconditionally abusable",
         "conditional_attack_path": "at least one edge needs validation: HasSession (point-in-time), AllowedToAct / "
-                                   "AllowedToDelegate (Kerberos delegation prerequisites), GenericWrite on a user or "
-                                   "computer, AddKeyCredentialLink",
+                                   "AddAllowedToAct / AllowedToDelegate (Kerberos delegation prerequisites), "
+                                   "GenericWrite on a user, computer, OU or container, GenericAll on a computer, "
+                                   "AllExtendedRights on a computer (LAPS), AddKeyCredentialLink, WriteSPN, "
+                                   "WriteAccountRestrictions",
     },
 }
 

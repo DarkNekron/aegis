@@ -29,8 +29,10 @@ machine-readably in each `ground_truth.json` under `conventions`.
 * **Tier-0 seeds:**
   * the domain object
   * domain controllers
-  * Domain Admins (512), Domain Controllers (516), Schema Admins (518), Enterprise Admins (519)
-  * BUILTIN Administrators (544), Account Operators (548), Server Operators (549), Backup Operators (551)
+  * Domain Admins (512), Domain Controllers (516), Schema Admins (518), Enterprise Admins (519),
+    Key Admins (526), Enterprise Key Admins (527)
+  * BUILTIN Administrators (544), Account Operators (548), Server Operators (549), Print Operators (550),
+    Backup Operators (551)
   * Administrator (500) and krbtgt (502)
 * **DCSync holders are tier-0.** That means holding *both* GetChanges and GetChangesAll on the domain.
 * **Transitive members of tier-0 groups are tier-0.** A path ends at the **first** tier-0 object it reaches.
@@ -39,8 +41,8 @@ machine-readably in each `ground_truth.json` under `conventions`.
 * **Traversable relationships:**
   * membership and admin: MemberOf, AdminTo, HasSession
   * ACL rights: GenericAll, GenericWrite, WriteDacl, WriteOwner, Owns, AddMember, AddSelf, ForceChangePassword, AllExtendedRights
-  * credential and key rights: AddKeyCredentialLink, ReadLAPSPassword, ReadGMSAPassword
-  * delegation: AllowedToAct, AddAllowedToAct, AllowedToDelegate
+  * credential and key rights: AddKeyCredentialLink, ReadLAPSPassword, ReadGMSAPassword, WriteSPN
+  * delegation: AllowedToAct, AddAllowedToAct, AllowedToDelegate, WriteAccountRestrictions
   * other: HasSIDHistory, Contains, GPLink, DCSync
 * **Not traversed:**
   * CanRDP, CanPSRemote and ExecuteDCOM give user-level logon only. Harvesting credentials from a session needs
@@ -48,8 +50,15 @@ machine-readably in each `ground_truth.json` under `conventions`.
   * TrustedBy is informational.
   * GetChanges or GetChangesAll alone does not grant DCSync.
   * Unknown relationship types are never traversed.
-* **Conditional** (the path is reported as a *conditional attack path*): HasSession, AllowedToAct, AllowedToDelegate,
-  AddKeyCredentialLink, and GenericWrite on a user or computer. A path whose edges are all unconditional is reported
+* **Traversal depends on the target's kind.** For example, AddMember only applies to groups, and GenericWrite on a
+  domain is not an escalation step. The full table, with explanations and remediation advice, is
+  `backend/app/graph_engine/rules.py`.
+* **Conditional** (the path is reported as a *conditional attack path*):
+  * HasSession
+  * AllowedToAct, AddAllowedToAct, AllowedToDelegate, WriteAccountRestrictions
+  * AddKeyCredentialLink, WriteSPN
+  * GenericWrite on a user, computer, OU or container
+  * GenericAll or AllExtendedRights on a computer A path whose edges are all unconditional is reported
   as a *potential privilege escalation*. AEGIS never reports a path as exploited. That label is reserved for an
   analyst's manual validation.
 

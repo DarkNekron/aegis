@@ -14,8 +14,8 @@ from sqlalchemy import select
 
 from app.models import AdEdge, AdObject
 
-TIER0_GROUP_SUFFIXES = ("-512", "-516", "-518", "-519", "-S-1-5-32-544", "-S-1-5-32-548", "-S-1-5-32-549",
-                        "-S-1-5-32-551")
+TIER0_GROUP_SUFFIXES = ("-512", "-516", "-518", "-519", "-526", "-527", "-S-1-5-32-544", "-S-1-5-32-548",
+                        "-S-1-5-32-549", "-S-1-5-32-550", "-S-1-5-32-551")
 TIER0_USER_SUFFIXES = ("-500", "-502")
 CONDITIONAL_KINDS = {"HasSession", "AllowedToAct", "AllowedToDelegate", "AddKeyCredentialLink"}
 

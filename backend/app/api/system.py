@@ -62,6 +62,7 @@ def system_health(
         "resources": snap.to_dict(),
         "limits": settings.public_limits(),
         "jobs": jobs.stats(),
+        "graph_cache": request.app.state.graphs.cache.stats(),
         "database": {
             "ok": db_ok,
             "engine": "sqlite" if settings.is_sqlite else "postgresql",

@@ -23,3 +23,17 @@ cd backend
 .venv\Scripts\python.exe ..\scripts\bench_ingestion.py --users 20000 --workdir <empty dir> --phase generate
 .venv\Scripts\python.exe ..\scripts\bench_ingestion.py --users 20000 --workdir <same dir> --phase import
 ```
+
+## Graph construction
+
+| Date | Dataset | Nodes / edges | Build time | Graph memory retained | Peak RSS increase |
+|---|---|---|---|---|---|
+| 2026-11-18 | The 20k-user ingestion benchmark database above | 27,859 / 96,426 | **0.89 s** | **87 MB** | +90 MB (81 → 171 MB) |
+
+Method: `scripts/bench_ingestion.py --phase graph` in a fresh process against the database produced by
+`--phase import`. "Retained" is RSS after the build minus RSS before it, with the graph still referenced.
+
+**Calibration consequence:** the original planning estimate (700 B/node, 500 B/edge) predicted 64 MB, which was
+35% too low. `app/core/resources.py` now uses 1,100 B/node and 700 B/edge, predicting 98 MB for this dataset.
+At the configured maximum graph size (150k nodes, 1.5M edges) the estimate is about 1.2 GB, which is why
+`AEGIS_GRAPH_CACHE_SIZE` defaults to 1 on this 16 GB laptop.

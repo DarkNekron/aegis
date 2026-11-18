@@ -73,11 +73,48 @@ def generate(path: Path, users: int, seed: int = 7) -> dict[str, int]:
     return {"users": users, "groups": groups, "computers": computers}
 
 
+def bench_graph(workdir: Path) -> None:
+    """Build the attack graph from an already-imported benchmark database (fresh process)."""
+    from app.core.config import Settings
+    from app.core.resources import ResourceManager
+    from app.db.session import Database
+    from app.graph_engine.builder import GraphBuilder
+
+    settings = Settings(env="test", data_dir=workdir / "data", _env_file=None)
+    db = Database(settings.database_url)
+    proc = psutil.Process()
+    baseline = proc.memory_info().rss
+    peak = [baseline]
+    stop = threading.Event()
+
+    def sample() -> None:
+        while not stop.is_set():
+            peak[0] = max(peak[0], proc.memory_info().rss)
+            time.sleep(0.05)
+
+    sampler = threading.Thread(target=sample, daemon=True)
+    sampler.start()
+    t0 = time.perf_counter()
+    graph = GraphBuilder(db, ResourceManager(settings)).build(1)
+    seconds = time.perf_counter() - t0
+    stop.set()
+    sampler.join()
+    retained = proc.memory_info().rss
+    print(json.dumps({
+        "nodes": graph.stats.nodes, "edges": graph.stats.edges, "traversable": graph.stats.traversable_edges,
+        "tier0": graph.stats.tier0, "sources": graph.stats.sources, "build_seconds": round(seconds, 2),
+        "estimated_mb": graph.stats.estimated_memory_mb,
+        "rss_baseline_mb": baseline // 2**20, "rss_peak_mb": peak[0] // 2**20,
+        "graph_retained_mb": (retained - baseline) // 2**20,
+    }, indent=2))
+    db.dispose()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--users", type=int, default=20_000)
     parser.add_argument("--workdir", type=Path, required=True)
-    parser.add_argument("--phase", choices=["generate", "import", "both"], default="both",
+    parser.add_argument("--phase", choices=["generate", "import", "both", "graph"], default="both",
                         help="run generate and import in separate processes for a clean peak-RSS figure")
     args = parser.parse_args()
     args.workdir.mkdir(parents=True, exist_ok=True)
@@ -87,6 +124,9 @@ def main() -> None:
         sys.exit(f"Refusing to run: only {vm.available // 2**20} MB RAM free (need 1024 MB).")
 
     zpath = args.workdir / "bench.zip"
+    if args.phase == "graph":
+        bench_graph(args.workdir)
+        return
     gen_seconds = 0.0
     shape: dict[str, int] = {"users": args.users}
     if args.phase in ("generate", "both"):

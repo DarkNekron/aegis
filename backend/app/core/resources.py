@@ -22,11 +22,11 @@ from app.core.errors import InsufficientResourcesError, LimitExceededError
 
 MB = 1024 * 1024
 
-# Planning estimates for an in-memory NetworkX MultiDiGraph with AEGIS's slim attributes
-# (integer node keys, ~5 small attributes per node, ~3 per edge). Calibrated in Phase 6
-# benchmarks; deliberately on the high side.
-EST_BYTES_PER_NODE = 700
-EST_BYTES_PER_EDGE = 500
+# In-memory NetworkX MultiDiGraph with AEGIS's slim attributes. Calibrated 2026-11-18
+# (docs/BENCHMARKS.md): 27,859 nodes + 96,426 edges retained 87 MB, i.e. about 1,000 B/node and
+# 600 B/edge. The constants add about 10% headroom so the free-RAM guard errs on the safe side.
+EST_BYTES_PER_NODE = 1100
+EST_BYTES_PER_EDGE = 700
 
 
 @dataclass(frozen=True)

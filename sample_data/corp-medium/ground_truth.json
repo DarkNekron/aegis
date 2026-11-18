@@ -2,7 +2,7 @@
   "claim": "Exactly the users listed in shortest_hops (chain starts and users inside planted chains) have a path to tier-0; every other enabled non-tier-0 user has none.",
   "conventions": {
     "classification": {
-      "conditional_attack_path": "at least one edge needs validation: HasSession (point-in-time), AllowedToAct / AllowedToDelegate (Kerberos delegation prerequisites), GenericWrite on a user or computer, AddKeyCredentialLink",
+      "conditional_attack_path": "at least one edge needs validation: HasSession (point-in-time), AllowedToAct / AddAllowedToAct / AllowedToDelegate (Kerberos delegation prerequisites), GenericWrite on a user, computer, OU or container, GenericAll on a computer, AllExtendedRights on a computer (LAPS), AddKeyCredentialLink, WriteSPN, WriteAccountRestrictions",
       "potential_privilege_escalation": "every edge is unconditionally abusable"
     },
     "not_traversable": {
@@ -18,8 +18,8 @@
     "tier0_seeds": [
       "the domain object",
       "domain controllers (isdc, or members of DOMAIN CONTROLLERS)",
-      "groups RID 512 Domain Admins, 516 Domain Controllers, 518 Schema Admins, 519 Enterprise Admins",
-      "BUILTIN 544 Administrators, 548 Account Operators, 549 Server Operators, 551 Backup Operators",
+      "groups RID 512 Domain Admins, 516 Domain Controllers, 518 Schema Admins, 519 Enterprise Admins, 526 Key Admins, 527 Enterprise Key Admins",
+      "BUILTIN 544 Administrators, 548 Account Operators, 549 Server Operators, 550 Print Operators, 551 Backup Operators",
       "users RID 500 Administrator and 502 krbtgt"
     ],
     "traversable": [
@@ -44,7 +44,9 @@
       "HasSIDHistory",
       "Contains",
       "GPLink",
-      "DCSync"
+      "DCSync",
+      "WriteSPN",
+      "WriteAccountRestrictions"
     ]
   },
   "dataset": "corp-medium",
