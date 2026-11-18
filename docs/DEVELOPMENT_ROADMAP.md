@@ -18,7 +18,7 @@ Status legend: ✅ done · 🔄 in progress · ⏳ pending
 | 5.1 | HTTP API | snapshots, streaming uploads, import/analysis jobs, paths, evidence, graph views, settings, dashboard | API tests + live run | ✅ 15 API tests; live curl run on corp-medium (33/33 exposed, 130 MB) |
 | 5.0 | Security layer | auth, sessions, CSRF, RBAC, rate limit, audit log, headers | AuthN/AuthZ tests per role | ✅ 31 security tests; docs/SECURITY.md |
 | 3.6 | Module 6 — Simulation | view-based what-if, all action types | Original graph unchanged (tested) | ✅ ground-truth simulations; monotonicity property; 0.54 s at 20k users |
-| 3.7 | Module 7 — Comparison | object/edge/path diffs, change report | Diff tests across two snapshots | ⏳ |
+| 3.7 | Module 7 — Comparison | object/edge/path diffs, change report | Diff tests across two snapshots | ✅ matches corp-small→v2 ground truth; 3.1 s / +0 MB at 114k relationships |
 | 3.8 | Module 8 — Reporting | HTML, PDF and JSON with all 13 sections | Reports generate from sample data | ⏳ |
 | 4 | Frontend + Module 5 | 10 pages, Cytoscape explorer, filtering and incremental expansion | `tsc`, build, manual walkthrough | ⏳ |
 | 6 | Validation | integration tests, benchmarks with measured time and peak RAM | `BENCHMARKS.md` from real runs | ⏳ |
@@ -85,3 +85,10 @@ from the moment it exists.
 * The simulation tests exposed a non-monotone environment metric: it used the mean of identity scores, which went up
   after remediation. It was replaced by a capped exposure mass, documented in RISK_SCORING.md §4, and a property test
   now guards it.
+
+**3.7 Historical comparison (done 2026-11-18)**
+* `GET /api/comparisons?old_snapshot=&new_snapshot=` covers objects (added, removed, changed incl. renames matched on
+  SID), relationships by category, tier-0 changes, attack paths (appeared, resolved, score changes) by signature,
+  exposure changes, environment risk change and a plain-language summary.
+* Primary-group memberships of created or deleted accounts are reported as implied by the account change, not as
+  membership changes.

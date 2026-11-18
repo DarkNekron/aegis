@@ -8,6 +8,7 @@ from fastapi import APIRouter, Request
 from sqlalchemy import func, select
 
 from app.api.common import Admin, Analyst, Viewer, analysis_view, snapshot_view
+from app.comparison.engine import SnapshotComparator
 from app.core.errors import NotFoundError
 from app.graph_engine.config import TIER0_CATEGORIES, AnalysisConfig, load_config, save_config
 from app.models import AdObject, Analysis, AttackPath, Snapshot
@@ -88,3 +89,14 @@ def dashboard(viewer: Viewer, snapshot_id: int | None = None) -> dict[str, Any]:
                 "high_risk_relationships": f"distinct relationships on attack paths with rule severity >= "
                                            f"{HIGH_RISK_STEP_SEVERITY}",
                 "unresolved_findings": "Critical and High attack paths in the latest analysis"}}
+
+
+@router.get("/comparisons")
+def compare_snapshots(viewer: Viewer, old_snapshot: int, new_snapshot: int, old_analysis: int | None = None,
+                      new_analysis: int | None = None) -> dict[str, Any]:
+    """Historical comparison of two snapshots (objects, relationships, privilege, attack paths, risk).
+
+    Analyses default to the latest completed analysis of each snapshot.
+    """
+    return SnapshotComparator(viewer.db).compare(old_snapshot, new_snapshot, old_analysis_id=old_analysis,
+                                                 new_analysis_id=new_analysis)

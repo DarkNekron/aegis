@@ -61,3 +61,9 @@ Brandes) take under 10 ms combined on this dataset.
 | Date | Dataset | Simulation | Time (baseline + what-if, both scored) | Outcome |
 |---|---|---|---|---|
 | 2026-11-18 | 20k-user corp-medium (27,638 nodes / 114,481 edges) | `apply_min_cut` | **0.54 s** | 33 → 0 paths; environment risk 74.38 → 0; 24 relationships removed |
+
+## Historical comparison
+
+| Date | Dataset | Time | Memory | Notes |
+|---|---|---|---|---|
+| 2026-11-18 | Two snapshots of the 20k-user corp-medium (27,638 objects / 114,480 relationships each) | **3.13 s** | +0 MB RSS | Worst case for the set operations: every row is compared on both sides (`EXCEPT` in SQLite) and the result is empty. |
