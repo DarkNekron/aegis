@@ -1,0 +1,32 @@
+{
+  "collected_at": "2026-11-01T09:00:00Z",
+  "format": "aegis-inventory",
+  "objects": [
+    {
+      "domain": "EXAMPLE.TEST",
+      "enabled": true,
+      "id": "INV-U-1",
+      "kind": "User",
+      "name": "alice@example.test",
+      "properties": {
+        "department": "Finance",
+        "note": "AEGIS synthetic sample data"
+      }
+    },
+    {
+      "id": "INV-G-1",
+      "kind": "Group",
+      "name": "SERVER-ADMINS@example.test"
+    }
+  ],
+  "relationships": [
+    {
+      "confidence": 1.0,
+      "evidence": "Synthetic example",
+      "kind": "MemberOf",
+      "source": "INV-U-1",
+      "target": "INV-G-1"
+    }
+  ],
+  "version": 1
+}

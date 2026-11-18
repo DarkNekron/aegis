@@ -11,7 +11,7 @@ Status legend: ✅ done · 🔄 in progress · ⏳ pending
 | 2 | Environment | venv, pinned requirements, Vite/React/Tailwind scaffold, `.env.example`, install report | Import checks and `tsc` pass | ✅ |
 | 3.0 | Backend foundation | settings, DB/ORM models, Alembic, resource manager, job runner, health endpoint | Unit tests for limits, jobs and cancellation | ✅ 50 tests; live smoke test: 86 MB idle RSS |
 | 3.1 | Module 1 — Ingestion | BloodHound CE/SharpHound JSON+ZIP, custom JSON, CSV; safe ZIP; normaliser; import summary | Tests: valid, malformed, ZIP traversal, ZIP bomb, duplicates | ✅ 61 ingestion tests; 20k-user import: 9.4 s, +14 MB RSS |
-| 3.2 | Synthetic datasets | generator + 3 fixed datasets with documented ground truth | Datasets validate against the ingestion engine | ⏳ |
+| 3.2 | Synthetic datasets | generator + 3 fixed datasets with documented ground truth | Datasets validate against the ingestion engine | ✅ ground truth verified by an independent reference checker (17 tests) |
 | 3.3 | Module 2 — Graph construction | rules table, builder, tier-0 classifier, DCSync derivation, graph cache | Tests: edge semantics, unknown kinds not traversed | ⏳ |
 | 3.4 | Module 3 — Attack-path engine | reverse Dijkstra, Yen k-paths, bounded DFS, dedup, min-cut, sampled betweenness, explanations | Ground-truth path tests pass | ⏳ |
 | 3.5 | Module 4 — Risk engine | scoring model, configurable weights, `RISK_SCORING.md` | Deterministic score tests | ⏳ |
@@ -38,3 +38,9 @@ from the moment it exists.
 * Imports run through `python -m app.cli import <snapshot> <file>` for now. The HTTP upload endpoint is wired in
   stage 5.0, behind authentication, RBAC and CSRF, using the already-tested `UploadWriter`.
 * Uploaded raw files will be deleted after import by default, because they contain sensitive directory data.
+
+**3.2 Synthetic datasets (done 2026-11-18)**
+* The conventions in `sample_data/README.md` (tier-0 definition, traversable relationships, conditional edges,
+  starting identities) are the specification for stages 3.3 and 3.4.
+* `backend/tests/reference_paths.py` is a deliberately naive oracle. The real engine must agree with it on every
+  dataset, and it must never be imported by application code.

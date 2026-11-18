@@ -1,0 +1,859 @@
+{
+  "claim": "Exactly the users listed in shortest_hops (chain starts and users inside planted chains) have a path to tier-0; every other enabled non-tier-0 user has none.",
+  "conventions": {
+    "classification": {
+      "conditional_attack_path": "at least one edge needs validation: HasSession (point-in-time), AllowedToAct / AllowedToDelegate (Kerberos delegation prerequisites), GenericWrite on a user or computer, AddKeyCredentialLink",
+      "potential_privilege_escalation": "every edge is unconditionally abusable"
+    },
+    "not_traversable": {
+      "CanRDP / CanPSRemote / ExecuteDCOM": "user-level logon only; harvesting credentials from sessions needs local admin, so these never chain into HasSession",
+      "GetChanges or GetChangesAll alone": "DCSync requires both rights",
+      "TrustedBy": "trust abuse depends on SID filtering and is informational by default",
+      "any unknown relationship type": "stored and shown, never traversed"
+    },
+    "path_end": "a path ends at the first tier-0 object it reaches",
+    "sources": "enabled User/ServiceAccount objects that are not tier-0 and not placeholders",
+    "tier0_dcsync": "a principal holding BOTH GetChanges and GetChangesAll on the domain is tier-0",
+    "tier0_membership": "transitive members of any tier-0 group are tier-0",
+    "tier0_seeds": [
+      "the domain object",
+      "domain controllers (isdc, or members of DOMAIN CONTROLLERS)",
+      "groups RID 512 Domain Admins, 516 Domain Controllers, 518 Schema Admins, 519 Enterprise Admins",
+      "BUILTIN 544 Administrators, 548 Account Operators, 549 Server Operators, 551 Backup Operators",
+      "users RID 500 Administrator and 502 krbtgt"
+    ],
+    "traversable": [
+      "MemberOf",
+      "AdminTo",
+      "HasSession",
+      "GenericAll",
+      "GenericWrite",
+      "WriteDacl",
+      "WriteOwner",
+      "Owns",
+      "AddMember",
+      "AddSelf",
+      "ForceChangePassword",
+      "AllExtendedRights",
+      "AddKeyCredentialLink",
+      "ReadLAPSPassword",
+      "ReadGMSAPassword",
+      "AllowedToAct",
+      "AddAllowedToAct",
+      "AllowedToDelegate",
+      "HasSIDHistory",
+      "Contains",
+      "GPLink",
+      "DCSync"
+    ]
+  },
+  "dataset": "corp-medium",
+  "decoys": [
+    {
+      "id": "D1_0",
+      "source": "D1_0_U@AEGISLAB.LOCAL",
+      "why": "CanRDP to a server with a Domain Admin session (user-level access only)"
+    },
+    {
+      "id": "D2_0",
+      "source": "D2_0_U@AEGISLAB.LOCAL",
+      "why": "member of a group holding only GetChanges on the domain"
+    },
+    {
+      "id": "D3_0",
+      "source": "D3_0_U@AEGISLAB.LOCAL",
+      "why": "disabled account with GenericAll on DOMAIN ADMINS"
+    },
+    {
+      "id": "D4_0",
+      "source": "D4_0_U@AEGISLAB.LOCAL",
+      "why": "ExecuteDCOM to a server with a Domain Admin session (user-level access only)"
+    },
+    {
+      "id": "D1_1",
+      "source": "D1_1_U@AEGISLAB.LOCAL",
+      "why": "CanRDP to a server with a Domain Admin session (user-level access only)"
+    },
+    {
+      "id": "D2_1",
+      "source": "D2_1_U@AEGISLAB.LOCAL",
+      "why": "member of a group holding only GetChanges on the domain"
+    },
+    {
+      "id": "D3_1",
+      "source": "D3_1_U@AEGISLAB.LOCAL",
+      "why": "disabled account with GenericAll on DOMAIN ADMINS"
+    },
+    {
+      "id": "D4_1",
+      "source": "D4_1_U@AEGISLAB.LOCAL",
+      "why": "ExecuteDCOM to a server with a Domain Admin session (user-level access only)"
+    },
+    {
+      "id": "D1_2",
+      "source": "D1_2_U@AEGISLAB.LOCAL",
+      "why": "CanRDP to a server with a Domain Admin session (user-level access only)"
+    },
+    {
+      "id": "D2_2",
+      "source": "D2_2_U@AEGISLAB.LOCAL",
+      "why": "member of a group holding only GetChanges on the domain"
+    },
+    {
+      "id": "D3_2",
+      "source": "D3_2_U@AEGISLAB.LOCAL",
+      "why": "disabled account with GenericAll on DOMAIN ADMINS"
+    },
+    {
+      "id": "D4_2",
+      "source": "D4_2_U@AEGISLAB.LOCAL",
+      "why": "ExecuteDCOM to a server with a Domain Admin session (user-level access only)"
+    }
+  ],
+  "description": "3000 ordinary users in 375 groups on 750 hosts with dense internal ACLs, memberships, local admin rights and sessions that by construction never reach tier-0, plus 24 planted attack paths (templates T1-T8, 1-8 hops) and 12 decoys.",
+  "planted_paths": [
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "T1_0_U@AEGISLAB.LOCAL",
+          "GenericAll",
+          "DOMAIN ADMINS@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 1,
+      "id": "T1_0",
+      "source": "T1_0_U@AEGISLAB.LOCAL",
+      "target": "DOMAIN ADMINS@AEGISLAB.LOCAL",
+      "template": "T1"
+    },
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "T2_0_U@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T2_0_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T2_0_G1@AEGISLAB.LOCAL",
+          "WriteOwner",
+          "DOMAIN ADMINS@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 2,
+      "id": "T2_0",
+      "source": "T2_0_U@AEGISLAB.LOCAL",
+      "target": "DOMAIN ADMINS@AEGISLAB.LOCAL",
+      "template": "T2"
+    },
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "T3_0_U@AEGISLAB.LOCAL",
+          "ForceChangePassword",
+          "T3_0_U2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T3_0_U2@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T3_0_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T3_0_G1@AEGISLAB.LOCAL",
+          "AddMember",
+          "BACKUP OPERATORS@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 3,
+      "id": "T3_0",
+      "source": "T3_0_U@AEGISLAB.LOCAL",
+      "target": "BACKUP OPERATORS@AEGISLAB.LOCAL",
+      "template": "T3"
+    },
+    {
+      "classification": "conditional_attack_path",
+      "edges": [
+        [
+          "T4_0_U@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T4_0_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T4_0_G1@AEGISLAB.LOCAL",
+          "AdminTo",
+          "T4_0_C1.AEGISLAB.LOCAL"
+        ],
+        [
+          "T4_0_C1.AEGISLAB.LOCAL",
+          "HasSession",
+          "T4_0_DA@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 3,
+      "id": "T4_0",
+      "source": "T4_0_U@AEGISLAB.LOCAL",
+      "target": "T4_0_DA@AEGISLAB.LOCAL",
+      "template": "T4"
+    },
+    {
+      "classification": "conditional_attack_path",
+      "edges": [
+        [
+          "T5_0_U@AEGISLAB.LOCAL",
+          "GenericWrite",
+          "T5_0_GPO@AEGISLAB.LOCAL"
+        ],
+        [
+          "T5_0_GPO@AEGISLAB.LOCAL",
+          "GPLink",
+          "T5_0_OU@AEGISLAB.LOCAL"
+        ],
+        [
+          "T5_0_OU@AEGISLAB.LOCAL",
+          "Contains",
+          "T5_0_C1.AEGISLAB.LOCAL"
+        ],
+        [
+          "T5_0_C1.AEGISLAB.LOCAL",
+          "HasSession",
+          "T5_0_DA@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 4,
+      "id": "T5_0",
+      "source": "T5_0_U@AEGISLAB.LOCAL",
+      "target": "T5_0_DA@AEGISLAB.LOCAL",
+      "template": "T5"
+    },
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "T6_0_U@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T6_0_G0@AEGISLAB.LOCAL"
+        ],
+        [
+          "T6_0_G0@AEGISLAB.LOCAL",
+          "Owns",
+          "T6_0_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T6_0_G1@AEGISLAB.LOCAL",
+          "GenericAll",
+          "T6_0_U2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T6_0_U2@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T6_0_G2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T6_0_G2@AEGISLAB.LOCAL",
+          "AdminTo",
+          "DC01.AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 5,
+      "id": "T6_0",
+      "source": "T6_0_U@AEGISLAB.LOCAL",
+      "target": "DC01.AEGISLAB.LOCAL",
+      "template": "T6"
+    },
+    {
+      "classification": "conditional_attack_path",
+      "edges": [
+        [
+          "T7_0_U@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T7_0_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T7_0_G1@AEGISLAB.LOCAL",
+          "WriteDacl",
+          "T7_0_U2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T7_0_U2@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T7_0_G2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T7_0_G2@AEGISLAB.LOCAL",
+          "AdminTo",
+          "T7_0_C1.AEGISLAB.LOCAL"
+        ],
+        [
+          "T7_0_C1.AEGISLAB.LOCAL",
+          "HasSession",
+          "T7_0_RU@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 5,
+      "id": "T7_0",
+      "source": "T7_0_U@AEGISLAB.LOCAL",
+      "target": "T7_0_RU@AEGISLAB.LOCAL",
+      "template": "T7"
+    },
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "T8_0_U@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T8_0_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_0_G1@AEGISLAB.LOCAL",
+          "AddMember",
+          "T8_0_G2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_0_G2@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T8_0_G3@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_0_G3@AEGISLAB.LOCAL",
+          "AddMember",
+          "T8_0_G4@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_0_G4@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T8_0_G5@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_0_G5@AEGISLAB.LOCAL",
+          "AddMember",
+          "T8_0_G6@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_0_G6@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T8_0_G7@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_0_G7@AEGISLAB.LOCAL",
+          "WriteDacl",
+          "ENTERPRISE ADMINS@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 8,
+      "id": "T8_0",
+      "source": "T8_0_U@AEGISLAB.LOCAL",
+      "target": "ENTERPRISE ADMINS@AEGISLAB.LOCAL",
+      "template": "T8"
+    },
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "T1_1_U@AEGISLAB.LOCAL",
+          "GenericAll",
+          "DOMAIN ADMINS@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 1,
+      "id": "T1_1",
+      "source": "T1_1_U@AEGISLAB.LOCAL",
+      "target": "DOMAIN ADMINS@AEGISLAB.LOCAL",
+      "template": "T1"
+    },
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "T2_1_U@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T2_1_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T2_1_G1@AEGISLAB.LOCAL",
+          "WriteOwner",
+          "DOMAIN ADMINS@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 2,
+      "id": "T2_1",
+      "source": "T2_1_U@AEGISLAB.LOCAL",
+      "target": "DOMAIN ADMINS@AEGISLAB.LOCAL",
+      "template": "T2"
+    },
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "T3_1_U@AEGISLAB.LOCAL",
+          "ForceChangePassword",
+          "T3_1_U2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T3_1_U2@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T3_1_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T3_1_G1@AEGISLAB.LOCAL",
+          "AddMember",
+          "BACKUP OPERATORS@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 3,
+      "id": "T3_1",
+      "source": "T3_1_U@AEGISLAB.LOCAL",
+      "target": "BACKUP OPERATORS@AEGISLAB.LOCAL",
+      "template": "T3"
+    },
+    {
+      "classification": "conditional_attack_path",
+      "edges": [
+        [
+          "T4_1_U@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T4_1_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T4_1_G1@AEGISLAB.LOCAL",
+          "AdminTo",
+          "T4_1_C1.AEGISLAB.LOCAL"
+        ],
+        [
+          "T4_1_C1.AEGISLAB.LOCAL",
+          "HasSession",
+          "T4_1_DA@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 3,
+      "id": "T4_1",
+      "source": "T4_1_U@AEGISLAB.LOCAL",
+      "target": "T4_1_DA@AEGISLAB.LOCAL",
+      "template": "T4"
+    },
+    {
+      "classification": "conditional_attack_path",
+      "edges": [
+        [
+          "T5_1_U@AEGISLAB.LOCAL",
+          "GenericWrite",
+          "T5_1_GPO@AEGISLAB.LOCAL"
+        ],
+        [
+          "T5_1_GPO@AEGISLAB.LOCAL",
+          "GPLink",
+          "T5_1_OU@AEGISLAB.LOCAL"
+        ],
+        [
+          "T5_1_OU@AEGISLAB.LOCAL",
+          "Contains",
+          "T5_1_C1.AEGISLAB.LOCAL"
+        ],
+        [
+          "T5_1_C1.AEGISLAB.LOCAL",
+          "HasSession",
+          "T5_1_DA@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 4,
+      "id": "T5_1",
+      "source": "T5_1_U@AEGISLAB.LOCAL",
+      "target": "T5_1_DA@AEGISLAB.LOCAL",
+      "template": "T5"
+    },
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "T6_1_U@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T6_1_G0@AEGISLAB.LOCAL"
+        ],
+        [
+          "T6_1_G0@AEGISLAB.LOCAL",
+          "Owns",
+          "T6_1_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T6_1_G1@AEGISLAB.LOCAL",
+          "GenericAll",
+          "T6_1_U2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T6_1_U2@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T6_1_G2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T6_1_G2@AEGISLAB.LOCAL",
+          "AdminTo",
+          "DC01.AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 5,
+      "id": "T6_1",
+      "source": "T6_1_U@AEGISLAB.LOCAL",
+      "target": "DC01.AEGISLAB.LOCAL",
+      "template": "T6"
+    },
+    {
+      "classification": "conditional_attack_path",
+      "edges": [
+        [
+          "T7_1_U@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T7_1_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T7_1_G1@AEGISLAB.LOCAL",
+          "WriteDacl",
+          "T7_1_U2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T7_1_U2@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T7_1_G2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T7_1_G2@AEGISLAB.LOCAL",
+          "AdminTo",
+          "T7_1_C1.AEGISLAB.LOCAL"
+        ],
+        [
+          "T7_1_C1.AEGISLAB.LOCAL",
+          "HasSession",
+          "T7_1_RU@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 5,
+      "id": "T7_1",
+      "source": "T7_1_U@AEGISLAB.LOCAL",
+      "target": "T7_1_RU@AEGISLAB.LOCAL",
+      "template": "T7"
+    },
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "T8_1_U@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T8_1_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_1_G1@AEGISLAB.LOCAL",
+          "AddMember",
+          "T8_1_G2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_1_G2@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T8_1_G3@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_1_G3@AEGISLAB.LOCAL",
+          "AddMember",
+          "T8_1_G4@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_1_G4@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T8_1_G5@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_1_G5@AEGISLAB.LOCAL",
+          "AddMember",
+          "T8_1_G6@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_1_G6@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T8_1_G7@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_1_G7@AEGISLAB.LOCAL",
+          "WriteDacl",
+          "ENTERPRISE ADMINS@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 8,
+      "id": "T8_1",
+      "source": "T8_1_U@AEGISLAB.LOCAL",
+      "target": "ENTERPRISE ADMINS@AEGISLAB.LOCAL",
+      "template": "T8"
+    },
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "T1_2_U@AEGISLAB.LOCAL",
+          "GenericAll",
+          "DOMAIN ADMINS@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 1,
+      "id": "T1_2",
+      "source": "T1_2_U@AEGISLAB.LOCAL",
+      "target": "DOMAIN ADMINS@AEGISLAB.LOCAL",
+      "template": "T1"
+    },
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "T2_2_U@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T2_2_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T2_2_G1@AEGISLAB.LOCAL",
+          "WriteOwner",
+          "DOMAIN ADMINS@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 2,
+      "id": "T2_2",
+      "source": "T2_2_U@AEGISLAB.LOCAL",
+      "target": "DOMAIN ADMINS@AEGISLAB.LOCAL",
+      "template": "T2"
+    },
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "T3_2_U@AEGISLAB.LOCAL",
+          "ForceChangePassword",
+          "T3_2_U2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T3_2_U2@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T3_2_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T3_2_G1@AEGISLAB.LOCAL",
+          "AddMember",
+          "BACKUP OPERATORS@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 3,
+      "id": "T3_2",
+      "source": "T3_2_U@AEGISLAB.LOCAL",
+      "target": "BACKUP OPERATORS@AEGISLAB.LOCAL",
+      "template": "T3"
+    },
+    {
+      "classification": "conditional_attack_path",
+      "edges": [
+        [
+          "T4_2_U@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T4_2_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T4_2_G1@AEGISLAB.LOCAL",
+          "AdminTo",
+          "T4_2_C1.AEGISLAB.LOCAL"
+        ],
+        [
+          "T4_2_C1.AEGISLAB.LOCAL",
+          "HasSession",
+          "T4_2_DA@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 3,
+      "id": "T4_2",
+      "source": "T4_2_U@AEGISLAB.LOCAL",
+      "target": "T4_2_DA@AEGISLAB.LOCAL",
+      "template": "T4"
+    },
+    {
+      "classification": "conditional_attack_path",
+      "edges": [
+        [
+          "T5_2_U@AEGISLAB.LOCAL",
+          "GenericWrite",
+          "T5_2_GPO@AEGISLAB.LOCAL"
+        ],
+        [
+          "T5_2_GPO@AEGISLAB.LOCAL",
+          "GPLink",
+          "T5_2_OU@AEGISLAB.LOCAL"
+        ],
+        [
+          "T5_2_OU@AEGISLAB.LOCAL",
+          "Contains",
+          "T5_2_C1.AEGISLAB.LOCAL"
+        ],
+        [
+          "T5_2_C1.AEGISLAB.LOCAL",
+          "HasSession",
+          "T5_2_DA@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 4,
+      "id": "T5_2",
+      "source": "T5_2_U@AEGISLAB.LOCAL",
+      "target": "T5_2_DA@AEGISLAB.LOCAL",
+      "template": "T5"
+    },
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "T6_2_U@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T6_2_G0@AEGISLAB.LOCAL"
+        ],
+        [
+          "T6_2_G0@AEGISLAB.LOCAL",
+          "Owns",
+          "T6_2_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T6_2_G1@AEGISLAB.LOCAL",
+          "GenericAll",
+          "T6_2_U2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T6_2_U2@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T6_2_G2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T6_2_G2@AEGISLAB.LOCAL",
+          "AdminTo",
+          "DC01.AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 5,
+      "id": "T6_2",
+      "source": "T6_2_U@AEGISLAB.LOCAL",
+      "target": "DC01.AEGISLAB.LOCAL",
+      "template": "T6"
+    },
+    {
+      "classification": "conditional_attack_path",
+      "edges": [
+        [
+          "T7_2_U@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T7_2_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T7_2_G1@AEGISLAB.LOCAL",
+          "WriteDacl",
+          "T7_2_U2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T7_2_U2@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T7_2_G2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T7_2_G2@AEGISLAB.LOCAL",
+          "AdminTo",
+          "T7_2_C1.AEGISLAB.LOCAL"
+        ],
+        [
+          "T7_2_C1.AEGISLAB.LOCAL",
+          "HasSession",
+          "T7_2_RU@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 5,
+      "id": "T7_2",
+      "source": "T7_2_U@AEGISLAB.LOCAL",
+      "target": "T7_2_RU@AEGISLAB.LOCAL",
+      "template": "T7"
+    },
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "T8_2_U@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T8_2_G1@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_2_G1@AEGISLAB.LOCAL",
+          "AddMember",
+          "T8_2_G2@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_2_G2@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T8_2_G3@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_2_G3@AEGISLAB.LOCAL",
+          "AddMember",
+          "T8_2_G4@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_2_G4@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T8_2_G5@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_2_G5@AEGISLAB.LOCAL",
+          "AddMember",
+          "T8_2_G6@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_2_G6@AEGISLAB.LOCAL",
+          "MemberOf",
+          "T8_2_G7@AEGISLAB.LOCAL"
+        ],
+        [
+          "T8_2_G7@AEGISLAB.LOCAL",
+          "WriteDacl",
+          "ENTERPRISE ADMINS@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 8,
+      "id": "T8_2",
+      "source": "T8_2_U@AEGISLAB.LOCAL",
+      "target": "ENTERPRISE ADMINS@AEGISLAB.LOCAL",
+      "template": "T8"
+    }
+  ],
+  "seed": 20261118,
+  "shortest_hops": {
+    "T1_0_U@AEGISLAB.LOCAL": 1,
+    "T1_1_U@AEGISLAB.LOCAL": 1,
+    "T1_2_U@AEGISLAB.LOCAL": 1,
+    "T2_0_U@AEGISLAB.LOCAL": 2,
+    "T2_1_U@AEGISLAB.LOCAL": 2,
+    "T2_2_U@AEGISLAB.LOCAL": 2,
+    "T3_0_U2@AEGISLAB.LOCAL": 2,
+    "T3_0_U@AEGISLAB.LOCAL": 3,
+    "T3_1_U2@AEGISLAB.LOCAL": 2,
+    "T3_1_U@AEGISLAB.LOCAL": 3,
+    "T3_2_U2@AEGISLAB.LOCAL": 2,
+    "T3_2_U@AEGISLAB.LOCAL": 3,
+    "T4_0_U@AEGISLAB.LOCAL": 3,
+    "T4_1_U@AEGISLAB.LOCAL": 3,
+    "T4_2_U@AEGISLAB.LOCAL": 3,
+    "T5_0_U@AEGISLAB.LOCAL": 4,
+    "T5_1_U@AEGISLAB.LOCAL": 4,
+    "T5_2_U@AEGISLAB.LOCAL": 4,
+    "T6_0_U2@AEGISLAB.LOCAL": 2,
+    "T6_0_U@AEGISLAB.LOCAL": 5,
+    "T6_1_U2@AEGISLAB.LOCAL": 2,
+    "T6_1_U@AEGISLAB.LOCAL": 5,
+    "T6_2_U2@AEGISLAB.LOCAL": 2,
+    "T6_2_U@AEGISLAB.LOCAL": 5,
+    "T7_0_U2@AEGISLAB.LOCAL": 3,
+    "T7_0_U@AEGISLAB.LOCAL": 5,
+    "T7_1_U2@AEGISLAB.LOCAL": 3,
+    "T7_1_U@AEGISLAB.LOCAL": 5,
+    "T7_2_U2@AEGISLAB.LOCAL": 3,
+    "T7_2_U@AEGISLAB.LOCAL": 5,
+    "T8_0_U@AEGISLAB.LOCAL": 8,
+    "T8_1_U@AEGISLAB.LOCAL": 8,
+    "T8_2_U@AEGISLAB.LOCAL": 8
+  },
+  "sources_with_paths_count": 33,
+  "synthetic": true
+}

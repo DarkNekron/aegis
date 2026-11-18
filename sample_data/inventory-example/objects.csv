@@ -1,0 +1,5 @@
+id,kind,name,domain,enabled,department
+INV-U-1,User,alice@example.test,EXAMPLE.TEST,true,Finance
+INV-U-2,User,bob@example.test,EXAMPLE.TEST,true,IT
+INV-G-1,Group,SERVER-ADMINS@example.test,EXAMPLE.TEST,,
+INV-C-1,Computer,FILESRV01.example.test,EXAMPLE.TEST,true,

@@ -1,0 +1,4 @@
+source,target,kind,confidence,evidence
+INV-U-2,INV-G-1,MemberOf,1.0,HR system group export
+INV-G-1,INV-C-1,AdminTo,0.9,CMDB local administrators report
+INV-C-1,INV-U-1,HasSession,0.6,EDR logon telemetry

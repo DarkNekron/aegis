@@ -1,0 +1,405 @@
+{
+  "all_paths": [
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "ALICE@AEGISLAB.LOCAL",
+          "ForceChangePassword",
+          "SVC_BACKUP@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 1,
+      "id": "P1",
+      "source": "ALICE@AEGISLAB.LOCAL",
+      "target": "SVC_BACKUP@AEGISLAB.LOCAL",
+      "why": "Resetting SVC_BACKUP's password yields a Backup Operators member (tier-0)."
+    },
+    {
+      "classification": "conditional_attack_path",
+      "edges": [
+        [
+          "ALICE@AEGISLAB.LOCAL",
+          "GenericAll",
+          "HELPDESK@AEGISLAB.LOCAL"
+        ],
+        [
+          "HELPDESK@AEGISLAB.LOCAL",
+          "AdminTo",
+          "SRV-APP01.AEGISLAB.LOCAL"
+        ],
+        [
+          "SRV-APP01.AEGISLAB.LOCAL",
+          "HasSession",
+          "DA_JOHN@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 3,
+      "id": "P2",
+      "source": "ALICE@AEGISLAB.LOCAL",
+      "target": "DA_JOHN@AEGISLAB.LOCAL",
+      "why": "ALICE can add herself to HELPDESK, which administers SRV-APP01 where DA_JOHN was logged on."
+    },
+    {
+      "classification": "conditional_attack_path",
+      "edges": [
+        [
+          "BOB@AEGISLAB.LOCAL",
+          "MemberOf",
+          "HELPDESK@AEGISLAB.LOCAL"
+        ],
+        [
+          "HELPDESK@AEGISLAB.LOCAL",
+          "AdminTo",
+          "SRV-APP01.AEGISLAB.LOCAL"
+        ],
+        [
+          "SRV-APP01.AEGISLAB.LOCAL",
+          "HasSession",
+          "DA_JOHN@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 3,
+      "id": "P3",
+      "source": "BOB@AEGISLAB.LOCAL",
+      "target": "DA_JOHN@AEGISLAB.LOCAL",
+      "why": "Local admin on a server holding a Domain Admin session."
+    },
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "CAROL@AEGISLAB.LOCAL",
+          "MemberOf",
+          "DEVOPS@AEGISLAB.LOCAL"
+        ],
+        [
+          "DEVOPS@AEGISLAB.LOCAL",
+          "AddMember",
+          "IT-ADMINS@AEGISLAB.LOCAL"
+        ],
+        [
+          "IT-ADMINS@AEGISLAB.LOCAL",
+          "WriteDacl",
+          "DOMAIN ADMINS@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 3,
+      "id": "P4",
+      "source": "CAROL@AEGISLAB.LOCAL",
+      "target": "DOMAIN ADMINS@AEGISLAB.LOCAL",
+      "why": "DEVOPS can add members to IT-ADMINS, which can rewrite the DOMAIN ADMINS ACL."
+    },
+    {
+      "classification": "conditional_attack_path",
+      "edges": [
+        [
+          "CAROL@AEGISLAB.LOCAL",
+          "MemberOf",
+          "DEVOPS@AEGISLAB.LOCAL"
+        ],
+        [
+          "DEVOPS@AEGISLAB.LOCAL",
+          "GenericAll",
+          "SVC_SQL@AEGISLAB.LOCAL"
+        ],
+        [
+          "SVC_SQL@AEGISLAB.LOCAL",
+          "AllowedToAct",
+          "DC01.AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 3,
+      "id": "P5",
+      "source": "CAROL@AEGISLAB.LOCAL",
+      "target": "DC01.AEGISLAB.LOCAL",
+      "why": "Control of SVC_SQL (which has an SPN) allows resource-based constrained delegation to DC01."
+    },
+    {
+      "classification": "conditional_attack_path",
+      "edges": [
+        [
+          "GRACE@AEGISLAB.LOCAL",
+          "GenericWrite",
+          "SERVERS-POLICY@AEGISLAB.LOCAL"
+        ],
+        [
+          "SERVERS-POLICY@AEGISLAB.LOCAL",
+          "GPLink",
+          "SERVERS@AEGISLAB.LOCAL"
+        ],
+        [
+          "SERVERS@AEGISLAB.LOCAL",
+          "Contains",
+          "SRV-APP01.AEGISLAB.LOCAL"
+        ],
+        [
+          "SRV-APP01.AEGISLAB.LOCAL",
+          "HasSession",
+          "DA_JOHN@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 4,
+      "id": "P6",
+      "source": "GRACE@AEGISLAB.LOCAL",
+      "target": "DA_JOHN@AEGISLAB.LOCAL",
+      "why": "Editing a GPO linked to the SERVERS OU gives code execution on SRV-APP01."
+    },
+    {
+      "classification": "potential_privilege_escalation",
+      "edges": [
+        [
+          "IVAN@AEGISLAB.LOCAL",
+          "MemberOf",
+          "IT-ADMINS@AEGISLAB.LOCAL"
+        ],
+        [
+          "IT-ADMINS@AEGISLAB.LOCAL",
+          "WriteDacl",
+          "DOMAIN ADMINS@AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 2,
+      "id": "P7",
+      "source": "IVAN@AEGISLAB.LOCAL",
+      "target": "DOMAIN ADMINS@AEGISLAB.LOCAL",
+      "why": "IT-ADMINS can grant itself full control of DOMAIN ADMINS."
+    },
+    {
+      "classification": "conditional_attack_path",
+      "edges": [
+        [
+          "SVC_SQL@AEGISLAB.LOCAL",
+          "AllowedToAct",
+          "DC01.AEGISLAB.LOCAL"
+        ]
+      ],
+      "hops": 1,
+      "id": "P8",
+      "source": "SVC_SQL@AEGISLAB.LOCAL",
+      "target": "DC01.AEGISLAB.LOCAL",
+      "why": "SVC_SQL is trusted for RBCD to a domain controller."
+    }
+  ],
+  "choke_points": [
+    {
+      "edge": [
+        "SRV-APP01.AEGISLAB.LOCAL",
+        "HasSession",
+        "DA_JOHN@AEGISLAB.LOCAL"
+      ],
+      "ids": [
+        "P2",
+        "P3",
+        "P6"
+      ],
+      "paths_through": 3
+    }
+  ],
+  "conventions": {
+    "classification": {
+      "conditional_attack_path": "at least one edge needs validation: HasSession (point-in-time), AllowedToAct / AllowedToDelegate (Kerberos delegation prerequisites), GenericWrite on a user or computer, AddKeyCredentialLink",
+      "potential_privilege_escalation": "every edge is unconditionally abusable"
+    },
+    "not_traversable": {
+      "CanRDP / CanPSRemote / ExecuteDCOM": "user-level logon only; harvesting credentials from sessions needs local admin, so these never chain into HasSession",
+      "GetChanges or GetChangesAll alone": "DCSync requires both rights",
+      "TrustedBy": "trust abuse depends on SID filtering and is informational by default",
+      "any unknown relationship type": "stored and shown, never traversed"
+    },
+    "path_end": "a path ends at the first tier-0 object it reaches",
+    "sources": "enabled User/ServiceAccount objects that are not tier-0 and not placeholders",
+    "tier0_dcsync": "a principal holding BOTH GetChanges and GetChangesAll on the domain is tier-0",
+    "tier0_membership": "transitive members of any tier-0 group are tier-0",
+    "tier0_seeds": [
+      "the domain object",
+      "domain controllers (isdc, or members of DOMAIN CONTROLLERS)",
+      "groups RID 512 Domain Admins, 516 Domain Controllers, 518 Schema Admins, 519 Enterprise Admins",
+      "BUILTIN 544 Administrators, 548 Account Operators, 549 Server Operators, 551 Backup Operators",
+      "users RID 500 Administrator and 502 krbtgt"
+    ],
+    "traversable": [
+      "MemberOf",
+      "AdminTo",
+      "HasSession",
+      "GenericAll",
+      "GenericWrite",
+      "WriteDacl",
+      "WriteOwner",
+      "Owns",
+      "AddMember",
+      "AddSelf",
+      "ForceChangePassword",
+      "AllExtendedRights",
+      "AddKeyCredentialLink",
+      "ReadLAPSPassword",
+      "ReadGMSAPassword",
+      "AllowedToAct",
+      "AddAllowedToAct",
+      "AllowedToDelegate",
+      "HasSIDHistory",
+      "Contains",
+      "GPLink",
+      "DCSync"
+    ]
+  },
+  "dataset": "corp-small",
+  "decoys": [
+    {
+      "source": "FRANK@AEGISLAB.LOCAL",
+      "why": "RDP-USERS can only RDP to WS01 (CanRDP is user-level, not admin)."
+    },
+    {
+      "source": "HENRY@AEGISLAB.LOCAL",
+      "why": "HALF-REPL holds GetChanges but not GetChangesAll, so no DCSync."
+    },
+    {
+      "source": "DAVE@AEGISLAB.LOCAL",
+      "why": "Only a member of DOMAIN USERS, which holds no rights."
+    },
+    {
+      "source": "ERIN@AEGISLAB.LOCAL",
+      "why": "Disabled account: not a valid starting identity."
+    },
+    {
+      "source": "AEGISLAB.LOCAL",
+      "why": "Outbound trust to PARTNER.LOCAL is not traversed."
+    }
+  ],
+  "description": "Hand-designed lab: six identities with paths to tier-0 (incl. alternatives, a conditional session path, RBCD and a GPO chain) plus decoys that must NOT produce paths.",
+  "excluded_sources": {
+    "DA_JOHN@AEGISLAB.LOCAL": "already tier-0",
+    "ERIN@AEGISLAB.LOCAL": "disabled account (holds GenericAll on DOMAIN ADMINS)",
+    "SVC_BACKUP@AEGISLAB.LOCAL": "already tier-0",
+    "SVC_REPL@AEGISLAB.LOCAL": "already tier-0"
+  },
+  "expected_placeholders": [
+    "PARTNER.LOCAL"
+  ],
+  "min_cut": {
+    "edge_disjoint_witness_paths": [
+      "P1",
+      "P3",
+      "P7",
+      "P8"
+    ],
+    "edges": [
+      [
+        "ALICE@AEGISLAB.LOCAL",
+        "ForceChangePassword",
+        "SVC_BACKUP@AEGISLAB.LOCAL"
+      ],
+      [
+        "IT-ADMINS@AEGISLAB.LOCAL",
+        "WriteDacl",
+        "DOMAIN ADMINS@AEGISLAB.LOCAL"
+      ],
+      [
+        "SRV-APP01.AEGISLAB.LOCAL",
+        "HasSession",
+        "DA_JOHN@AEGISLAB.LOCAL"
+      ],
+      [
+        "SVC_SQL@AEGISLAB.LOCAL",
+        "AllowedToAct",
+        "DC01.AEGISLAB.LOCAL"
+      ]
+    ],
+    "size": 4,
+    "unique": true
+  },
+  "not_tier0": [
+    "HALF-REPL@AEGISLAB.LOCAL",
+    "IT-ADMINS@AEGISLAB.LOCAL",
+    "ERIN@AEGISLAB.LOCAL"
+  ],
+  "shortest_hops": {
+    "ALICE@AEGISLAB.LOCAL": 1,
+    "BOB@AEGISLAB.LOCAL": 3,
+    "CAROL@AEGISLAB.LOCAL": 3,
+    "GRACE@AEGISLAB.LOCAL": 4,
+    "IVAN@AEGISLAB.LOCAL": 2,
+    "SVC_SQL@AEGISLAB.LOCAL": 1
+  },
+  "simulations": [
+    {
+      "paths_after": 5,
+      "paths_before": 8,
+      "remove": [
+        [
+          "SRV-APP01.AEGISLAB.LOCAL",
+          "HasSession",
+          "DA_JOHN@AEGISLAB.LOCAL"
+        ]
+      ],
+      "sources_losing_all_paths": [
+        "BOB@AEGISLAB.LOCAL",
+        "GRACE@AEGISLAB.LOCAL"
+      ],
+      "sources_still_exposed": [
+        "ALICE@AEGISLAB.LOCAL",
+        "CAROL@AEGISLAB.LOCAL",
+        "IVAN@AEGISLAB.LOCAL",
+        "SVC_SQL@AEGISLAB.LOCAL"
+      ]
+    },
+    {
+      "paths_after": 6,
+      "paths_before": 8,
+      "remove": [
+        [
+          "IT-ADMINS@AEGISLAB.LOCAL",
+          "WriteDacl",
+          "DOMAIN ADMINS@AEGISLAB.LOCAL"
+        ]
+      ],
+      "sources_losing_all_paths": [
+        "IVAN@AEGISLAB.LOCAL"
+      ],
+      "sources_still_exposed": [
+        "ALICE@AEGISLAB.LOCAL",
+        "BOB@AEGISLAB.LOCAL",
+        "CAROL@AEGISLAB.LOCAL",
+        "GRACE@AEGISLAB.LOCAL",
+        "SVC_SQL@AEGISLAB.LOCAL"
+      ]
+    }
+  ],
+  "sources_with_paths": [
+    "ALICE@AEGISLAB.LOCAL",
+    "BOB@AEGISLAB.LOCAL",
+    "CAROL@AEGISLAB.LOCAL",
+    "GRACE@AEGISLAB.LOCAL",
+    "IVAN@AEGISLAB.LOCAL",
+    "SVC_SQL@AEGISLAB.LOCAL"
+  ],
+  "sources_without_paths": [
+    "DAVE@AEGISLAB.LOCAL",
+    "FRANK@AEGISLAB.LOCAL",
+    "HENRY@AEGISLAB.LOCAL"
+  ],
+  "synthetic": true,
+  "tier0": [
+    "ACCOUNT OPERATORS@AEGISLAB.LOCAL",
+    "ADMINISTRATOR@AEGISLAB.LOCAL",
+    "ADMINISTRATORS@AEGISLAB.LOCAL",
+    "AEGISLAB.LOCAL",
+    "BACKUP OPERATORS@AEGISLAB.LOCAL",
+    "DA_JOHN@AEGISLAB.LOCAL",
+    "DC01.AEGISLAB.LOCAL",
+    "DOMAIN ADMINS@AEGISLAB.LOCAL",
+    "DOMAIN CONTROLLERS@AEGISLAB.LOCAL",
+    "ENTERPRISE ADMINS@AEGISLAB.LOCAL",
+    "KRBTGT@AEGISLAB.LOCAL",
+    "REPL-SVC@AEGISLAB.LOCAL",
+    "SCHEMA ADMINS@AEGISLAB.LOCAL",
+    "SVC_BACKUP@AEGISLAB.LOCAL",
+    "SVC_REPL@AEGISLAB.LOCAL"
+  ],
+  "tier0_reasons": {
+    "DA_JOHN@AEGISLAB.LOCAL": "member of DOMAIN ADMINS",
+    "REPL-SVC@AEGISLAB.LOCAL": "holds GetChanges + GetChangesAll (DCSync) on the domain",
+    "SVC_BACKUP@AEGISLAB.LOCAL": "member of BACKUP OPERATORS",
+    "SVC_REPL@AEGISLAB.LOCAL": "member of REPL-SVC (DCSync)"
+  }
+}
