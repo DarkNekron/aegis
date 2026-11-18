@@ -20,7 +20,7 @@ Status legend: ✅ done · 🔄 in progress · ⏳ pending
 | 3.6 | Module 6 — Simulation | view-based what-if, all action types | Original graph unchanged (tested) | ✅ ground-truth simulations; monotonicity property; 0.54 s at 20k users |
 | 3.7 | Module 7 — Comparison | object/edge/path diffs, change report | Diff tests across two snapshots | ✅ matches corp-small→v2 ground truth; 3.1 s / +0 MB at 114k relationships |
 | 3.8 | Module 8 — Reporting | HTML, PDF and JSON with all 13 sections | Reports generate from sample data | ✅ PDF/HTML/JSON, 13 sections + change section; hostile-name tests |
-| 4 | Frontend + Module 5 | 10 pages, Cytoscape explorer, filtering and incremental expansion | `tsc`, build, manual walkthrough | ⏳ |
+| 4 | Frontend + Module 5 | 10 pages, Cytoscape explorer, filtering and incremental expansion | `tsc`, build, manual walkthrough | ✅ strict tsc + build; headless-Edge walkthrough of all pages, no console or CSP errors |
 | 6 | Validation | integration tests, benchmarks with measured time and peak RAM | `BENCHMARKS.md` from real runs | ⏳ |
 | 7 | Docs & GitHub readiness | README, install, API, dev, testing, security, datasets, troubleshooting | Fresh-clone install works | ⏳ |
 
@@ -103,3 +103,15 @@ from the moment it exists.
 * Section 12 always includes a fresh minimum-cut simulation, so the headline recommendation is shown to work.
 * Rendered pages were inspected visually; that found severity colours not reaching table cells, now fixed.
 * **Next: Phase 4, the frontend** (React, TypeScript, Vite, Tailwind, Cytoscape.js), with 10 pages on top of this API.
+
+**Phase 4 Frontend (done 2026-11-18)**
+* React 19, TypeScript 7 (strict), Vite 8, Tailwind 4, Cytoscape.js and Recharts. Ten pages plus login, code-split per
+  page (initial JS 286 kB, or 91 kB gzipped; Cytoscape and charts load only where used).
+* The session cookie is HttpOnly. The CSRF token is held in memory only and re-issued after a reload. The only
+  `localStorage` content is the selected snapshot and analysis IDs.
+* The backend serves the build from its 404 handler (no catch-all route), so API routes are never shadowed and route
+  order does not matter. Assets are cached as `immutable`, and `index.html` and the API use `no-store`.
+* Verification: headless Edge, driven over the DevTools protocol, logged in through the real form and visited every
+  page with interactions (path selection, identity search and neighbourhood graph, comparison). It reported no
+  JavaScript exceptions and no CSP violations. The screenshots led to three visual fixes: graph over-zoom, badge
+  alignment and duplicate simulator suggestions.

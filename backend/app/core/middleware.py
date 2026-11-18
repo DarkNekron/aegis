@@ -8,7 +8,7 @@ import uuid
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
@@ -70,7 +70,7 @@ class RequestContextMiddleware:
                     if name.lower().encode() not in existing:
                         headers.append((name.lower().encode(), value.encode()))
                 headers.append((b"x-request-id", request_id.encode()))
-                if not is_docs:
+                if not is_docs and b"cache-control" not in existing:
                     headers.append((b"cache-control", b"no-store"))
                 message["headers"] = headers
             await send(message)
@@ -112,7 +112,13 @@ def install_error_handlers(app: FastAPI) -> None:
         return _error(422, "validation_failed", "The request is invalid.", request, details)
 
     @app.exception_handler(StarletteHTTPException)
-    async def _http(request: Request, exc: StarletteHTTPException) -> JSONResponse:
+    async def _http(request: Request, exc: StarletteHTTPException) -> Response:
+        if exc.status_code == 404:
+            from app.api.spa import spa_response  # local import: avoids a core -> api import cycle
+
+            page = spa_response(request)
+            if page is not None:
+                return page
         message = exc.detail if isinstance(exc.detail, str) else "Request failed."
         return _error(exc.status_code, f"http_{exc.status_code}", message, request)
 

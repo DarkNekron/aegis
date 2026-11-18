@@ -77,8 +77,9 @@ class Settings(BaseSettings):
     max_alternative_paths: int = Field(5, ge=1, le=50)
     centrality_sample_size: int = Field(256, ge=8, le=100_000)
     ui_max_elements: int = Field(1500, ge=50, le=20_000)
+    frontend_dist: Path = Path("frontend/dist")  # built UI served by the backend when present
 
-    @field_validator("data_dir")
+    @field_validator("data_dir", "frontend_dist")
     @classmethod
     def _resolve_data_dir(cls, value: Path) -> Path:
         # Relative paths are anchored to the repository root, never the current working directory.

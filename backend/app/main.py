@@ -17,6 +17,7 @@ from fastapi import FastAPI
 
 from app import __version__
 from app.api import admin_settings, analyses, auth, reports, snapshots, system, users
+from app.api.spa import install_spa
 from app.core.config import Settings, get_settings
 from app.core.jobs import JobRunner
 from app.core.logging import configure_logging
@@ -86,6 +87,7 @@ def create_app(settings: Settings | None = None, *, resources: ResourceManager |
     app.include_router(analyses.router)
     app.include_router(admin_settings.router)
     app.include_router(reports.router)
+    install_spa(app, settings.frontend_dist)  # served from the 404 handler, so route order never matters
     return app
 
 
