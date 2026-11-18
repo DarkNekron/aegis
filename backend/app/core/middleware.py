@@ -17,6 +17,8 @@ from app.core.errors import AegisError
 logger = logging.getLogger(__name__)
 
 _VALID_REQUEST_ID = re.compile(r"^[A-Za-z0-9-]{8,64}$")
+MAX_JSON_BODY = 1024 * 1024  # uploads have their own streaming limit (AEGIS_MAX_UPLOAD_MB)
+_UPLOAD_PATH = re.compile(r"^/api/snapshots/\d+/imports$")
 
 SECURITY_HEADERS: dict[str, str] = {
     "Content-Security-Policy": (
@@ -47,7 +49,13 @@ class RequestContextMiddleware:
             await self.app(scope, receive, send)
             return
 
-        incoming = dict(scope.get("headers") or []).get(b"x-request-id", b"").decode("latin-1")
+        headers = dict(scope.get("headers") or [])
+        length = headers.get(b"content-length", b"")
+        if (scope.get("method") in ("POST", "PUT", "PATCH") and length.isdigit() and int(length) > MAX_JSON_BODY
+                and not _UPLOAD_PATH.match(scope.get("path", ""))):
+            await _reject_too_large(send)
+            return
+        incoming = headers.get(b"x-request-id", b"").decode("latin-1")
         request_id = incoming if _VALID_REQUEST_ID.match(incoming) else uuid.uuid4().hex
         scope.setdefault("state", {})["request_id"] = request_id
         is_docs = scope.get("path", "").startswith(_DOCS_PATHS)
@@ -68,6 +76,13 @@ class RequestContextMiddleware:
             await send(message)
 
         await self.app(scope, receive, send_wrapper)
+
+
+async def _reject_too_large(send: Send) -> None:
+    body = b'{"error":{"code":"limit_exceeded","message":"Request body too large."}}'
+    await send({"type": "http.response.start", "status": 413,
+                "headers": [(b"content-type", b"application/json"), (b"content-length", str(len(body)).encode())]})
+    await send({"type": "http.response.body", "body": body})
 
 
 def _request_id(request: Request) -> str:

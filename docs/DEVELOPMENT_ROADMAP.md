@@ -15,6 +15,7 @@ Status legend: ✅ done · 🔄 in progress · ⏳ pending
 | 3.3 | Module 2 — Graph construction | rules table, builder, tier-0 classifier, DCSync derivation, graph cache | Tests: edge semantics, unknown kinds not traversed | ✅ engine matches the reference on all datasets; 20k-user graph: 0.9 s, 87 MB |
 | 3.4 | Module 3 — Attack-path engine | reverse Dijkstra, Yen k-paths, bounded DFS, dedup, min-cut, sampled betweenness, explanations | Ground-truth path tests pass | ✅ exact match on all datasets; 40 random-graph oracle checks; 20k users analysed in 0.67 s |
 | 3.5 | Module 4 — Risk engine | scoring model, configurable weights, `RISK_SCORING.md` | Deterministic score tests | ✅ worked example exact (81.90); analyses and paths persisted |
+| 5.1 | HTTP API | snapshots, streaming uploads, import/analysis jobs, paths, evidence, graph views, settings, dashboard | API tests + live run | ✅ 15 API tests; live curl run on corp-medium (33/33 exposed, 130 MB) |
 | 5.0 | Security layer | auth, sessions, CSRF, RBAC, rate limit, audit log, headers | AuthN/AuthZ tests per role | ✅ 31 security tests; docs/SECURITY.md |
 | 3.6 | Module 6 — Simulation | view-based what-if, all action types | Original graph unchanged (tested) | ⏳ |
 | 3.7 | Module 7 — Comparison | object/edge/path diffs, change report | Diff tests across two snapshots | ⏳ |
@@ -69,3 +70,10 @@ from the moment it exists.
 * `/api/system/health` now requires the viewer role.
 * Next: **5.1 HTTP API** for snapshots, uploads (streaming `UploadWriter`), imports and analyses as background jobs,
   path browsing, analyst validation, graph neighbourhoods and settings, all behind these controls.
+
+**5.1 HTTP API (done 2026-11-18)**
+* Uploads are raw request bodies, so the size limit is enforced while streaming; multipart parsing would spool the
+  whole file to disk first. Raw uploads are deleted after import.
+* A live run against Uvicorn with curl (real cookies, CSRF, upload, jobs, dashboard) matched the corp-medium ground
+  truth.
+* Next: 3.6 remediation simulation, 3.7 historical comparison, 3.8 reporting, then the frontend.
