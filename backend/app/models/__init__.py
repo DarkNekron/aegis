@@ -2,9 +2,9 @@
 
 from app.models.analysis import Analysis, AttackPath, PathClassification, Report, SettingEntry, Simulation
 from app.models.auth import AuditLog, AuthSession, Role, User
-from app.models.directory import AdEdge, AdObject, ImportJob, Snapshot, SnapshotStatus
+from app.models.directory import AdEdge, AdObject, ImportJob, IngestStagedEdge, Snapshot, SnapshotStatus
 
 __all__ = [
-    "AdEdge", "AdObject", "Analysis", "AttackPath", "AuditLog", "AuthSession", "ImportJob",
+    "AdEdge", "AdObject", "Analysis", "AttackPath", "AuditLog", "AuthSession", "ImportJob", "IngestStagedEdge",
     "PathClassification", "Report", "Role", "SettingEntry", "Simulation", "Snapshot", "SnapshotStatus", "User",
 ]

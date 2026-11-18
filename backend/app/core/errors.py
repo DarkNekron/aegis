@@ -49,6 +49,28 @@ class JobQueueFullError(AegisError):
     http_status = 503
 
 
+class UnsupportedFormatError(AegisError):
+    code = "unsupported_format"
+    http_status = 415
+
+
+class UnsafeArchiveError(AegisError):
+    """The uploaded archive is dangerous (path traversal, symlinks, ZIP bomb, encryption...)."""
+
+    code = "unsafe_archive"
+    http_status = 400
+
+
+class MalformedInputError(AegisError):
+    code = "malformed_input"
+    http_status = 400
+
+
+class ConflictError(AegisError):
+    code = "conflict"
+    http_status = 409
+
+
 class JobCancelledError(AegisError):
     code = "job_cancelled"
     http_status = 409

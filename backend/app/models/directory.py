@@ -67,6 +67,34 @@ class ImportJob(TimestampMixin, Base):
     snapshot: Mapped[Snapshot] = relationship(back_populates="imports")
 
 
+class IngestStagedEdge(Base):
+    """Temporary home for relationships during an import.
+
+    Endpoints are directory identifiers, because the referenced objects may appear later in the
+    same upload. On finalisation they are resolved to ``ad_objects`` rows, de-duplicated and
+    copied to ``ad_edges`` in set-based SQL; the staged rows are then deleted.
+    """
+
+    __tablename__ = "ingest_staged_edges"
+    __table_args__ = (Index("ix_ingest_staged_edges_identity", "import_job_id", "src_object_id", "dst_object_id",
+                            "kind"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    import_job_id: Mapped[int] = mapped_column(ForeignKey("import_jobs.id", ondelete="CASCADE"), nullable=False)
+    src_object_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    dst_object_id: Mapped[str] = mapped_column(String(128), nullable=False)
+    src_kind_hint: Mapped[str | None] = mapped_column(String(32))
+    dst_kind_hint: Mapped[str | None] = mapped_column(String(32))
+    src_name_hint: Mapped[str | None] = mapped_column(String(512))
+    dst_name_hint: Mapped[str | None] = mapped_column(String(512))
+    kind: Mapped[str] = mapped_column(String(48), nullable=False)
+    data_source: Mapped[str] = mapped_column(String(64), nullable=False)
+    collected_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    is_inherited: Mapped[bool | None] = mapped_column(Boolean)
+    confidence: Mapped[float] = mapped_column(Float, nullable=False)
+    evidence: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+
+
 class AdObject(Base):
     """A directory object (user, group, computer, domain, OU, GPO, ...).
 

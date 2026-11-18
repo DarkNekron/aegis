@@ -1,0 +1,25 @@
+# AEGIS — Benchmarks
+
+Only measured results are recorded here. Each entry states the hardware, dataset and command so it can be reproduced.
+
+**Machine:** Dell G15 5530, Intel i7-13650HX, 16 GB DDR5, NVMe SSD, Windows 11. VS Code and Chrome were running, as in a
+normal working session. Python 3.12.10, SQLite 3.49.1 (WAL), pure-Python SQLAlchemy (see DEPENDENCIES.md).
+
+## Ingestion
+
+| Date | Dataset | Upload | Import time | Peak RSS increase during import | Result |
+|---|---|---|---|---|---|
+| 2026-11-18 | Synthetic SharpHound v6 ZIP: 20,000 users, 2,857 groups, 5,000 computers | 0.6 MB ZIP / 15.9 MB JSON | **9.4 s** (11.3 s on a second run) | **+14 MB** (73 → 87 MB) | 27,857 objects, 96,426 relationships, 2 placeholders; database file 58.7 MB |
+
+Method: `scripts/bench_ingestion.py --phase generate`, then `--phase import` in a **fresh process**, so the
+generator's memory is not counted. RSS is sampled every 50 ms. The relationship mix: 15 members per group, 3 ACEs per
+group, 2 sessions and 2 admin groups per computer, plus a primary group for every principal.
+
+Interpretation: memory use is flat with respect to input size (streaming parse, batched Core inserts, set-based
+SQL finalisation). Run time scales with relationship count and is dominated by SQLite inserts.
+
+```powershell
+cd backend
+.venv\Scripts\python.exe ..\scripts\bench_ingestion.py --users 20000 --workdir <empty dir> --phase generate
+.venv\Scripts\python.exe ..\scripts\bench_ingestion.py --users 20000 --workdir <same dir> --phase import
+```

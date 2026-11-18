@@ -10,7 +10,7 @@ Status legend: ✅ done · 🔄 in progress · ⏳ pending
 | 1 | Architecture | `ARCHITECTURE.md`, `DEPENDENCIES.md`, this roadmap | Reviewed by owner | ✅ owner gave the go-ahead (2026-11-18) |
 | 2 | Environment | venv, pinned requirements, Vite/React/Tailwind scaffold, `.env.example`, install report | Import checks and `tsc` pass | ✅ |
 | 3.0 | Backend foundation | settings, DB/ORM models, Alembic, resource manager, job runner, health endpoint | Unit tests for limits, jobs and cancellation | ✅ 50 tests; live smoke test: 86 MB idle RSS |
-| 3.1 | Module 1 — Ingestion | BloodHound CE/SharpHound JSON+ZIP, custom JSON, CSV; safe ZIP; normaliser; import summary | Tests: valid, malformed, ZIP traversal, ZIP bomb, duplicates | ⏳ |
+| 3.1 | Module 1 — Ingestion | BloodHound CE/SharpHound JSON+ZIP, custom JSON, CSV; safe ZIP; normaliser; import summary | Tests: valid, malformed, ZIP traversal, ZIP bomb, duplicates | ✅ 61 ingestion tests; 20k-user import: 9.4 s, +14 MB RSS |
 | 3.2 | Synthetic datasets | generator + 3 fixed datasets with documented ground truth | Datasets validate against the ingestion engine | ⏳ |
 | 3.3 | Module 2 — Graph construction | rules table, builder, tier-0 classifier, DCSync derivation, graph cache | Tests: edge semantics, unknown kinds not traversed | ⏳ |
 | 3.4 | Module 3 — Attack-path engine | reverse Dijkstra, Yen k-paths, bounded DFS, dedup, min-cut, sampled betweenness, explanations | Ground-truth path tests pass | ⏳ |
@@ -33,3 +33,8 @@ from the moment it exists.
   resource figures and limits. `/api/health` will stay public.
 * Job timeouts are cooperative, because Python cannot safely kill threads. Every algorithm must call
   `ctx.token.checkpoint()` in its loops. This is enforced by code review and by timeout tests for each module.
+
+**3.1 Ingestion (done 2026-11-18)**
+* Imports run through `python -m app.cli import <snapshot> <file>` for now. The HTTP upload endpoint is wired in
+  stage 5.0, behind authentication, RBAC and CSRF, using the already-tested `UploadWriter`.
+* Uploaded raw files will be deleted after import by default, because they contain sensitive directory data.
