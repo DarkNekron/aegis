@@ -3,7 +3,7 @@
 Nodes are ``ad_objects.id`` integers. Attributes are kept deliberately small (evidence stays in the
 database and is loaded on demand):
 
-    node: kind, name, enabled, placeholder, tier0
+    node: oid (directory identifier, stable across snapshots), kind, name, enabled, placeholder, tier0
     edge (key = ad_edges.id, or "dcsync:<src>:<dst>" for derived edges):
           kind, t (traversable), cond (conditional), w (cost), sev (severity), conf (confidence)
 

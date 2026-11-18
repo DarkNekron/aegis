@@ -20,6 +20,7 @@ from app.core.errors import NotFoundError, ValidationFailedError
 from app.core.jobs import CancellationToken
 from app.core.resources import ResourceManager
 from app.db.session import Database
+from app.graph_engine.algorithms.index import gc_paused
 from app.graph_engine.config import AnalysisConfig, load_config
 from app.graph_engine.model import ADGraph, BuildStats
 from app.graph_engine.rules import rule_for
@@ -79,16 +80,18 @@ class GraphBuilder:
         stats = BuildStats(estimated_memory_mb=estimate)
         intern = sys.intern
 
-        with self.db.engine.connect() as conn:
+        with self.db.engine.connect() as conn, gc_paused():  # bulk, acyclic allocation (see gc_paused)
             node_rows = conn.execution_options(yield_per=STREAM_BATCH).execute(
                 select(objects.c.id, objects.c.object_id, objects.c.kind, objects.c.name, objects.c.enabled,
-                       objects.c.properties).where(objects.c.snapshot_id == snapshot_id))
+                       objects.c.properties)
+                .where(objects.c.snapshot_id == snapshot_id).order_by(objects.c.id))
             for pk, object_id, kind, name, enabled, props in node_rows:
                 token.checkpoint(1024)
                 props = props or {}
                 placeholder = bool(props.get("aegis_placeholder"))
                 kind = intern(kind)
-                g.add_node(pk, kind=kind, name=name, enabled=enabled, placeholder=placeholder, tier0=False)
+                g.add_node(pk, oid=object_id, kind=kind, name=name, enabled=enabled, placeholder=placeholder,
+                           tier0=False)
                 names[pk], kinds[pk] = name, kind
                 stats.placeholders += placeholder
                 if kind == "Domain" and not placeholder:
@@ -101,7 +104,7 @@ class GraphBuilder:
             member_of: dict[int, list[int]] = defaultdict(list)  # group -> direct members
             edge_rows = conn.execution_options(yield_per=STREAM_BATCH).execute(
                 select(edges.c.id, edges.c.src_object_pk, edges.c.dst_object_pk, edges.c.kind, edges.c.confidence)
-                .where(edges.c.snapshot_id == snapshot_id))
+                .where(edges.c.snapshot_id == snapshot_id).order_by(edges.c.id))
             for eid, src, dst, kind, confidence in edge_rows:
                 token.checkpoint(1024)
                 kind = intern(kind)

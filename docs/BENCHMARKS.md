@@ -37,3 +37,21 @@ Method: `scripts/bench_ingestion.py --phase graph` in a fresh process against th
 35% too low. `app/core/resources.py` now uses 1,100 B/node and 700 B/edge, predicting 98 MB for this dataset.
 At the configured maximum graph size (150k nodes, 1.5M edges) the estimate is about 1.2 GB, which is why
 `AEGIS_GRAPH_CACHE_SIZE` defaults to 1 on this 16 GB laptop.
+
+## Full pipeline: import, graph and attack-path analysis
+
+Dataset: `corp-medium` regenerated with 20,000 noise users (`scripts/bench_analysis.py --noise-users 20000`):
+27,638 objects, 114,480 relationships, 19,022 starting identities, 24 planted chains. One fresh process,
+default settings (depth 10, 5 alternatives per source).
+
+| Date | Import | Graph build | Analysis (paths, alternatives, min-cut, centrality) | Peak RSS | Correctness |
+|---|---|---|---|---|---|
+| 2026-11-18 (first run) | 19.1 s | 2.69 s | 2.55 s | 272 MB | 33/33 exposed users, hops match ground truth |
+| 2026-11-18 (after GC fix) | 17.8 s | **0.67 s** | **0.67 s** | **267 MB** | identical results; 222 tests pass |
+
+**Profiling finding:** after the graph exists, building the traversal index allocates about 113k small objects. CPython's
+cyclic garbage collector then repeatedly scanned the million-object heap. The objects involved contain no reference
+cycles, so collection is paused during bulk construction (`gc_paused()` in `algorithms/index.py`, also used by
+the graph builder). Index build went from 2.16 s to 0.62 s and graph build from 2.82 s to 0.67 s, with unchanged
+memory and no growth across repeated builds. The searches themselves (reverse Dijkstra, Yen, Edmonds–Karp,
+Brandes) take under 10 ms combined on this dataset.

@@ -13,7 +13,7 @@ Status legend: ✅ done · 🔄 in progress · ⏳ pending
 | 3.1 | Module 1 — Ingestion | BloodHound CE/SharpHound JSON+ZIP, custom JSON, CSV; safe ZIP; normaliser; import summary | Tests: valid, malformed, ZIP traversal, ZIP bomb, duplicates | ✅ 61 ingestion tests; 20k-user import: 9.4 s, +14 MB RSS |
 | 3.2 | Synthetic datasets | generator + 3 fixed datasets with documented ground truth | Datasets validate against the ingestion engine | ✅ ground truth verified by an independent reference checker (17 tests) |
 | 3.3 | Module 2 — Graph construction | rules table, builder, tier-0 classifier, DCSync derivation, graph cache | Tests: edge semantics, unknown kinds not traversed | ✅ engine matches the reference on all datasets; 20k-user graph: 0.9 s, 87 MB |
-| 3.4 | Module 3 — Attack-path engine | reverse Dijkstra, Yen k-paths, bounded DFS, dedup, min-cut, sampled betweenness, explanations | Ground-truth path tests pass | ⏳ |
+| 3.4 | Module 3 — Attack-path engine | reverse Dijkstra, Yen k-paths, bounded DFS, dedup, min-cut, sampled betweenness, explanations | Ground-truth path tests pass | ✅ exact match on all datasets; 40 random-graph oracle checks; 20k users analysed in 0.67 s |
 | 3.5 | Module 4 — Risk engine | scoring model, configurable weights, `RISK_SCORING.md` | Deterministic score tests | ⏳ |
 | 5.0 | Security layer | auth, sessions, CSRF, RBAC, rate limit, audit log, headers | AuthN/AuthZ tests per role | ⏳ |
 | 3.6 | Module 6 — Simulation | view-based what-if, all action types | Original graph unchanged (tested) | ⏳ |
@@ -49,3 +49,9 @@ from the moment it exists.
 * The tier-0 classification is written back to `ad_objects.is_tier0` / `tier0_reason` on every build, so list
   views and reports do not need the in-memory graph.
 * The graph memory estimate was recalibrated from measurement (see BENCHMARKS.md). It had been 35% too low.
+
+**3.4 Attack-path engine (done 2026-11-18)**
+* The algorithms are in `app/graph_engine/algorithms/`: index, shortest, alternatives (Yen + bounded DFS), flow
+  (Edmonds–Karp min-cut) and centrality (sampled Brandes). NetworkX's algorithms appear only in tests, as oracles.
+* Paths are ranked provisionally by (hops, cost, confidence). Stage 3.5 replaces this with the transparent risk score
+  and persists analyses and paths.
