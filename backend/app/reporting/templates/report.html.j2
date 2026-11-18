@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>{{ meta.title }} — {{ meta.snapshot.name }}</title>
+<style>
+  :root { --ink:#1b2430; --muted:#5b6675; --line:#d9dee5; --accent:#1f5fbf; --bg:#f6f8fb;
+          --crit:#c62828; --high:#e65100; --med:#b28704; --low:#2e7d32; }
+  * { box-sizing: border-box; }
+  body { font: 14px/1.55 "Segoe UI", system-ui, sans-serif; color: var(--ink); margin: 0; background: #fff; }
+  main { max-width: 1040px; margin: 0 auto; padding: 32px 40px 64px; }
+  header.cover { border-bottom: 3px solid var(--accent); padding-bottom: 20px; margin-bottom: 28px; }
+  .brand { letter-spacing: .3em; font-weight: 700; color: var(--accent); font-size: 13px; }
+  h1 { font-size: 28px; margin: 8px 0 4px; } h2 { font-size: 20px; margin: 36px 0 12px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+  h3 { font-size: 15px; margin: 20px 0 8px; }
+  .muted { color: var(--muted); } .mono { font-family: Consolas, "Cascadia Code", monospace; font-size: 12.5px; }
+  .banner { background: #fff4e5; border: 1px solid #f0c27a; padding: 8px 12px; border-radius: 6px; margin: 12px 0; }
+  .classification { display: inline-block; border: 1px solid var(--crit); color: var(--crit); font-weight: 700; padding: 2px 8px; font-size: 12px; border-radius: 4px; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0 16px; font-size: 13px; }
+  th, td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: var(--bg); font-weight: 600; }
+  .sev { font-weight: 700; } .Critical { color: var(--crit); } .High { color: var(--high); } .Medium { color: var(--med); } .Low { color: var(--low); }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
+  .kpi { border: 1px solid var(--line); border-radius: 8px; padding: 12px; background: var(--bg); }
+  .kpi b { display: block; font-size: 22px; } .kpi span { color: var(--muted); font-size: 12px; }
+  .finding { border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 6px; padding: 12px 16px; margin: 14px 0; page-break-inside: avoid; }
+  ol, ul { margin: 6px 0 6px 20px; padding: 0; }
+  footer { margin-top: 48px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
+  @media print { main { padding: 0; } h2 { page-break-after: avoid; } }
+</style>
+</head>
+<body>
+<main>
+<header class="cover">
+  <div class="brand">AEGIS</div>
+  <h1>{{ meta.title }}</h1>
+  <div class="muted">{{ meta.snapshot.name }} · Analysis #{{ meta.analysis_id }} · generated {{ meta.generated_at[:19] | replace("T", " ") }} UTC{% if meta.generated_by %} by {{ meta.generated_by }}{% endif %}</div>
+  <p><span class="classification">{{ meta.classification }}</span></p>
+  {% if meta.sample_data %}<div class="banner"><b>Sample data.</b> This report was generated from AEGIS's synthetic sample dataset and does not describe a real organisation.</div>{% endif %}
+</header>
+
+{% set titles = meta.section_titles %}
+{% for key in meta.sections %}
+<section id="{{ key }}">
+<h2>{{ loop.index }}. {{ titles[key] }}</h2>
+
+{% if key == "executive_summary" %}
+  {% set env = executive_summary.environment_risk %}
+  <div class="kpis">
+    <div class="kpi"><b class="sev {{ env.severity }}">{{ env.score }}</b><span>Environment risk ({{ env.severity }})</span></div>
+    <div class="kpi"><b>{{ privileged_exposure.exposed_identities }}</b><span>of {{ privileged_exposure.starting_identities }} identities exposed</span></div>
+    <div class="kpi"><b>{{ attack_paths.total }}</b><span>attack paths</span></div>
+    <div class="kpi"><b>{{ recommendations.minimum_cut_size }}</b><span>changes to break every path</span></div>
+  </div>
+  <ul>{% for m in executive_summary.messages %}<li>{{ m }}</li>{% endfor %}</ul>
+  {% if executive_summary.top_findings %}<h3>Most significant findings</h3>
+  <table><tr><th>Severity</th><th>Score</th><th>Route</th></tr>
+  {% for f in executive_summary.top_findings %}<tr><td class="sev {{ f.severity }}">{{ f.severity }}</td><td>{{ f.score }}</td><td>{{ f.route }}</td></tr>{% endfor %}
+  </table>{% endif %}
+
+{% elif key == "scope" %}
+  <table>
+    <tr><th>Snapshot</th><td>{{ scope.snapshot }}</td></tr>
+    <tr><th>Collection time</th><td>{{ scope.collected_at or "not recorded" }}</td></tr>
+    <tr><th>Source</th><td>{{ scope.source_kind or "-" }}</td></tr>
+    <tr><th>Analysis</th><td>#{{ scope.analysis.id }}, completed {{ scope.analysis.completed_at }}; max depth {{ scope.analysis.parameters.max_depth }}, {{ scope.analysis.parameters.alternatives_per_source }} route(s) per identity</td></tr>
+  </table>
+  <h3>Data sources</h3>
+  <table><tr><th>File</th><th>Format</th><th>Status</th><th>SHA-256</th></tr>
+  {% for d in scope.data_sources %}<tr><td>{{ d.file }}</td><td>{{ d.format }}</td><td>{{ d.status }}</td><td class="mono">{{ d.sha256 }}</td></tr>{% endfor %}</table>
+  <h3>Out of scope</h3><ul>{% for o in scope.out_of_scope %}<li>{{ o }}</li>{% endfor %}</ul>
+
+{% elif key == "methodology" %}
+  <ol>{% for a in methodology.approach %}<li>{{ a }}</li>{% endfor %}</ol>
+  <h3>Path classifications</h3>
+  <table>{% for k, v in methodology.classifications.items() %}<tr><th>{{ k }}</th><td>{{ v }}</td></tr>{% endfor %}</table>
+  <h3>Limitations</h3><ul>{% for l in methodology.limitations %}<li>{{ l }}</li>{% endfor %}</ul>
+
+{% elif key == "environment" %}
+  <p>Domains: {% for d in environment.domains %}<b>{{ d }}</b>{% if not loop.last %}, {% endif %}{% else %}<span class="muted">none collected</span>{% endfor %}</p>
+  <table><tr><th>Object type</th><th>Count</th></tr>
+  {% for k, v in environment.objects_by_kind | dictsort %}<tr><td>{{ k }}</td><td>{{ v }}</td></tr>{% endfor %}</table>
+
+{% elif key == "directory_statistics" %}
+  {% set d = directory_statistics %}
+  <table>
+    <tr><th>Objects</th><td>{{ d.objects_total }}</td></tr>
+    <tr><th>Accounts enabled / disabled</th><td>{{ d.accounts.enabled }} / {{ d.accounts.disabled }}</td></tr>
+    <tr><th>Service accounts</th><td>{{ d.service_accounts }}</td></tr>
+    <tr><th>Relationships</th><td>{{ d.relationships_total }}</td></tr>
+    <tr><th>Collection gaps (placeholders)</th><td>{{ d.collection_gaps }}</td></tr>
+  </table>
+  <h3>Relationships by type</h3>
+  <table><tr><th>Type</th><th>Count</th></tr>{% for k, v in d.relationships_by_kind.items() %}<tr><td>{{ k }}</td><td>{{ v }}</td></tr>{% endfor %}</table>
+
+{% elif key == "privileged_exposure" %}
+  <p>{{ privileged_exposure.tier0_total }} tier-0 objects, of which {{ privileged_exposure.tier0_accounts }} are accounts.</p>
+  <h3>Exposed privileged targets</h3>
+  <table><tr><th>Target</th><th>Type</th><th>Identities reaching it</th></tr>
+  {% for t in privileged_exposure.exposed_targets %}<tr><td>{{ t.name }}</td><td>{{ t.kind }}</td><td>{{ t.identities }}</td></tr>{% else %}<tr><td colspan="3" class="muted">None</td></tr>{% endfor %}</table>
+  <h3>Tier-0 inventory</h3>
+  <table><tr><th>Object</th><th>Type</th><th>Enabled</th><th>Why it is tier-0</th></tr>
+  {% for o in privileged_exposure.objects %}<tr><td>{{ o.name }}</td><td>{{ o.kind }}</td><td>{{ o.enabled if o.enabled is not none else "-" }}</td><td>{{ o.reason }}</td></tr>{% endfor %}</table>
+
+{% elif key == "attack_paths" %}
+  <p>{{ attack_paths.total }} paths; showing the {{ attack_paths.listed }} highest-risk.
+  {% if attack_paths.beyond_depth %}{{ attack_paths.beyond_depth }} identities reach tier-0 only beyond the depth limit.{% endif %}</p>
+  <table><tr><th>#</th><th>Severity</th><th>Score</th><th>Hops</th><th>Classification</th><th>Route</th></tr>
+  {% for p in attack_paths.paths %}<tr><td>{{ loop.index }}</td><td class="sev {{ p.severity }}">{{ p.severity }}</td><td>{{ p.score }}</td><td>{{ p.hops }}</td><td>{{ p.classification }}</td><td>{{ p.route }}</td></tr>{% endfor %}</table>
+
+{% elif key == "critical_findings" %}
+  {% for f in critical_findings %}
+  <div class="finding">
+    <h3>F{{ loop.index }}. <span class="sev {{ f.severity }}">{{ f.severity }}</span> ({{ f.score }}) — {{ f.source }} → {{ f.target }}</h3>
+    <p>{{ f.summary }}</p>
+    <ol>{% for s in f.steps %}<li><b>{{ s.from }}</b> <span class="mono">-[{{ s.kind }}]-></span> <b>{{ s.to }}</b> — {{ s.technique }}{% if s.alternatives %} (also: {{ s.alternatives | join(", ") }}){% endif %}</li>{% endfor %}</ol>
+    {% if f.conditions %}<p><b>Conditions to validate:</b></p><ul>{% for c in f.conditions %}<li>{{ c }}</li>{% endfor %}</ul>{% endif %}
+    <p class="muted">{{ f.classification }}{% if f.validated %} · validated by an analyst{% endif %}</p>
+    <table><tr><th>Score factor</th><th>Value</th><th>Points</th><th>Reason</th></tr>
+    {% for b in f.score_breakdown %}<tr><td>{{ b.factor }}</td><td>{{ b.value }}</td><td>{{ b.points }}</td><td>{{ b.why }}</td></tr>{% endfor %}</table>
+  </div>
+  {% else %}<p class="muted">No Critical or High findings.</p>{% endfor %}
+
+{% elif key == "technical_evidence" %}
+  {% for e in technical_evidence %}
+  <h3>F{{ loop.index }}: {{ e.route }}</h3>
+  <table><tr><th>Relationship</th><th>Recorded as</th><th>Source</th><th>Inherited</th><th>Confidence</th></tr>
+  {% for s in e.steps %}{% for r in s.records %}<tr><td>{{ s.relationship }}</td><td>{{ r.kind }}</td><td class="mono">{{ r.source_file }} · {{ r.field }} · {{ r.data_source }}</td><td>{{ r.inherited if r.inherited is not none else "-" }}</td><td>{{ r.confidence }}</td></tr>{% endfor %}{% endfor %}</table>
+  {% else %}<p class="muted">No findings require evidence listing.</p>{% endfor %}
+
+{% elif key == "risk_assessment" %}
+  {% set env = risk_assessment.environment %}
+  <p>Environment risk <b class="sev {{ env.severity }}">{{ env.score }} ({{ env.severity }})</b> = 0.5 × worst path {{ env.components.worst_path }} + 0.3 × exposure mass {{ env.components.exposure_mass }} + 0.2 × breadth {{ env.components.breadth }}.</p>
+  <table><tr><th>Factor</th><th>Weight</th></tr>{% for k, v in risk_assessment.weights.items() %}<tr><td>{{ k | replace("_", " ") }}</td><td>{{ "%.2f" | format(v) }}</td></tr>{% endfor %}</table>
+  <p class="muted">Bands: Critical ≥ {{ risk_assessment.bands.Critical }}, High ≥ {{ risk_assessment.bands.High }}, Medium ≥ {{ risk_assessment.bands.Medium }}. Unvalidated conditional paths are capped at {{ risk_assessment.conditional_cap }}.</p>
+  <h3>Choke points</h3>
+  <table><tr><th>Relationship</th><th>Paths through it</th></tr>{% for c in risk_assessment.choke_points %}<tr><td>{{ c.from }} -[{{ c.kinds | join(", ") }}]-> {{ c.to }}</td><td>{{ c.paths }}</td></tr>{% endfor %}</table>
+
+{% elif key == "recommendations" %}
+  <h3>Priority actions (minimum cut: {{ recommendations.minimum_cut_size }})</h3>
+  <table><tr><th>#</th><th>Relationship</th><th>Action</th></tr>
+  {% for a in recommendations.priority_actions %}<tr><td>{{ loop.index }}</td><td>{{ a.relationship }}</td><td>{{ a.action }}</td></tr>{% else %}<tr><td colspan="3" class="muted">No action required.</td></tr>{% endfor %}</table>
+  <h3>Techniques observed</h3>
+  <table><tr><th>Technique</th><th>Path steps</th><th>Relationship types</th></tr>{% for t in recommendations.by_technique %}<tr><td>{{ t.technique }}</td><td>{{ t.paths }}</td><td>{{ t.relationship_kinds | join(", ") }}</td></tr>{% endfor %}</table>
+  <h3>Structural measures</h3><ul>{% for g in recommendations.general %}<li>{{ g }}</li>{% endfor %}</ul>
+
+{% elif key == "simulations" %}
+  {% set sims = ([simulations.minimum_cut] if simulations.minimum_cut else []) + simulations.saved %}
+  {% for s in sims %}
+  <h3>{{ s.title }}</h3>
+  <table>
+    <tr><th>Attack paths</th><td>{{ s.paths_before }} → {{ s.paths_after }}</td></tr>
+    <tr><th>Exposed identities</th><td>{{ s.exposed_before }} → {{ s.exposed_after }}</td></tr>
+    <tr><th>Environment risk</th><td>{{ s.risk_before }} → {{ s.risk_after }}</td></tr>
+    <tr><th>Changes simulated</th><td>{% for r in s.removed %}<div class="mono">remove {{ r }}</div>{% endfor %}{% for d in s.disabled %}<div class="mono">disable {{ d }}</div>{% endfor %}</td></tr>
+  </table>
+  {% else %}<p class="muted">No simulations were run.</p>{% endfor %}
+  <p class="muted">Simulations run on an isolated in-memory copy; the directory was not modified.</p>
+
+{% elif key == "changes" %}
+  <ul>{% for line in changes.summary %}<li>{{ line }}</li>{% endfor %}</ul>
+
+{% elif key == "conclusion" %}
+  {% for line in conclusion %}<p>{{ line }}</p>{% endfor %}
+{% endif %}
+</section>
+{% endfor %}
+
+<footer>{{ meta.product }} {{ meta.product_version }} · {{ meta.classification }} · {{ meta.disclaimer }}</footer>
+</main>
+</body>
+</html>

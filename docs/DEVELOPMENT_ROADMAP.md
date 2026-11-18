@@ -19,7 +19,7 @@ Status legend: ✅ done · 🔄 in progress · ⏳ pending
 | 5.0 | Security layer | auth, sessions, CSRF, RBAC, rate limit, audit log, headers | AuthN/AuthZ tests per role | ✅ 31 security tests; docs/SECURITY.md |
 | 3.6 | Module 6 — Simulation | view-based what-if, all action types | Original graph unchanged (tested) | ✅ ground-truth simulations; monotonicity property; 0.54 s at 20k users |
 | 3.7 | Module 7 — Comparison | object/edge/path diffs, change report | Diff tests across two snapshots | ✅ matches corp-small→v2 ground truth; 3.1 s / +0 MB at 114k relationships |
-| 3.8 | Module 8 — Reporting | HTML, PDF and JSON with all 13 sections | Reports generate from sample data | ⏳ |
+| 3.8 | Module 8 — Reporting | HTML, PDF and JSON with all 13 sections | Reports generate from sample data | ✅ PDF/HTML/JSON, 13 sections + change section; hostile-name tests |
 | 4 | Frontend + Module 5 | 10 pages, Cytoscape explorer, filtering and incremental expansion | `tsc`, build, manual walkthrough | ⏳ |
 | 6 | Validation | integration tests, benchmarks with measured time and peak RAM | `BENCHMARKS.md` from real runs | ⏳ |
 | 7 | Docs & GitHub readiness | README, install, API, dev, testing, security, datasets, troubleshooting | Fresh-clone install works | ⏳ |
@@ -92,3 +92,14 @@ from the moment it exists.
   exposure changes, environment risk change and a plain-language summary.
 * Primary-group memberships of created or deleted accounts are reported as implied by the account change, not as
   membership changes.
+
+**3.8 Reporting (done 2026-11-18)**
+* One data model (`reporting/model.py`) is the JSON export and feeds both renderers, so the formats cannot disagree.
+* The HTML uses Jinja2 with autoescape and StrictUndefined. It is self-contained (no scripts or external resources)
+  and is always downloaded as an attachment.
+* The PDF uses ReportLab. All directory-derived text is XML-escaped before reaching `Paragraph` markup (tested with
+  script, font and img payloads in an account name). A Unicode TTF (Arial/Consolas on Windows, DejaVu on Linux) is
+  registered when available, with ASCII fallbacks otherwise.
+* Section 12 always includes a fresh minimum-cut simulation, so the headline recommendation is shown to work.
+* Rendered pages were inspected visually; that found severity colours not reaching table cells, now fixed.
+* **Next: Phase 4, the frontend** (React, TypeScript, Vite, Tailwind, Cytoscape.js), with 10 pages on top of this API.

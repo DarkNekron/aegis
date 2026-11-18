@@ -16,7 +16,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app import __version__
-from app.api import admin_settings, analyses, auth, snapshots, system, users
+from app.api import admin_settings, analyses, auth, reports, snapshots, system, users
 from app.core.config import Settings, get_settings
 from app.core.jobs import JobRunner
 from app.core.logging import configure_logging
@@ -26,6 +26,7 @@ from app.db.session import Database
 from app.graph_engine.cache import GraphCache
 from app.graph_engine.service import GraphService
 from app.ingestion.service import ImportService
+from app.reporting.service import ReportService
 from app.security.rate_limit import RateLimiter
 from app.security.sessions import SessionManager
 from app.services.analysis_service import AnalysisService
@@ -53,6 +54,7 @@ def create_app(settings: Settings | None = None, *, resources: ResourceManager |
         app.state.imports = ImportService(db, settings, rm)
         app.state.analyses = AnalysisService(db, settings, app.state.graphs)
         app.state.simulations = SimulationService(db, app.state.graphs)
+        app.state.reports = ReportService(db, settings, app.state.graphs)
         app.state.sessions = SessionManager(settings)
         app.state.rate_limiter = RateLimiter()
         app.state.started_monotonic = time.monotonic()
@@ -83,6 +85,7 @@ def create_app(settings: Settings | None = None, *, resources: ResourceManager |
     app.include_router(snapshots.router)
     app.include_router(analyses.router)
     app.include_router(admin_settings.router)
+    app.include_router(reports.router)
     return app
 
 

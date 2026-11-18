@@ -73,8 +73,9 @@ class RiskScorer:
             "relationship_severity": (severity, "mean severity of the relationships used: "
                                       + ", ".join(sorted({s.kind for s in path.steps}))),
             "confidence": (path.confidence, "product of the evidence confidence of each step"),
-            "exposure": (exposure, f"{sources_reaching_target} identit{'y' if sources_reaching_target == 1 else 'ies'}"
-                                   f" reach {target_name}"),
+            "exposure": (exposure, f"{sources_reaching_target} "
+                                   + ("identity reaches" if sources_reaching_target == 1 else "identities reach")
+                                   + f" {target_name}"),
             "alternatives": (alternatives, f"{paths_for_source} route(s) from this identity"),
             "evidence_completeness": (completeness, "all objects observed in the collection" if not placeholders
                                       else f"{placeholders} object(s) on the path were not collected"),

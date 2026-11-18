@@ -36,6 +36,10 @@ This page summarises the conventions and the endpoints.
 | `GET /api/paths/{id}` · `GET /api/paths/{id}/evidence` · `GET /api/paths/{id}/graph` | V | Explanation and score breakdown, per-step evidence records, Cytoscape elements |
 | `POST /api/paths/{id}/validate` `{"note"}` | A | Mark a path as a validated security exposure and rescore it |
 | `GET /api/snapshots/{id}/graph/neighborhood?node=&depth=1-3&traversable_only=` | V | Cytoscape elements around an object, capped at `AEGIS_UI_MAX_ELEMENTS` (`truncated` flag) |
+| `POST /api/analyses/{id}/simulations` `{"actions": [...]}` · `GET /api/analyses/{id}/simulations` · `GET /api/simulations/{id}` | A / V / V | Remediation what-ifs (remove relationship, step, membership, ACL, admin right or session; disable identity; apply minimum cut). Never modifies data. |
+| `GET /api/comparisons?old_snapshot=&new_snapshot=` | V | Historical comparison (objects, relationships, privilege, paths, exposure, risk) |
+| `POST /api/analyses/{id}/reports` `{"formats": ["pdf","html","json"], "simulation_ids"?, "previous_snapshot_id"?}` | A | Generate a report (job) with all 13 sections, plus the change section when a previous snapshot is given |
+| `GET /api/reports?snapshot_id=` · `GET /api/reports/{id}/download` | V | List reports, download one (always an attachment, with an `X-Report-SHA256` header) |
 | `GET /api/settings/analysis` · `PUT /api/settings/analysis` | A / D | Tier-0 categories, custom tier-0 objects, trust traversal |
 | `GET /api/settings/risk` · `PUT /api/settings/risk` | A / D | Risk model parameters ([RISK_SCORING.md](RISK_SCORING.md)) |
 | `GET /api/users` · `POST /api/users` · `PATCH /api/users/{id}` · `POST /api/users/{id}/reset-password` | D | User administration |
