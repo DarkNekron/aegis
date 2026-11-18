@@ -52,3 +52,39 @@ def client(settings: Settings, resources: ResourceManager) -> Iterator[TestClien
 
     with TestClient(create_app(settings, resources=resources)) as c:
         yield c
+
+
+# ---------------------------------------------------------------- authentication helpers
+PASSWORD = "Correct-Horse-Battery-9"
+
+
+def add_user(client: TestClient, username: str, role: str, password: str = PASSWORD) -> int:
+    from app.services.user_service import create_user
+
+    with client.app.state.db.session() as s:
+        user = create_user(s, username, password, role)
+        s.commit()
+        return user.id
+
+
+def login(client: TestClient, username: str, password: str = PASSWORD) -> str:
+    """Log in (sets the session cookie on the client) and return the CSRF token."""
+    response = client.post("/api/auth/login", json={"username": username, "password": password})
+    assert response.status_code == 200, response.text
+    return response.json()["csrf_token"]
+
+
+def as_role(client: TestClient, role: str) -> TestClient:
+    add_user(client, f"{role}-user", role)
+    client.headers["X-CSRF-Token"] = login(client, f"{role}-user")
+    return client
+
+
+@pytest.fixture
+def viewer_client(client: TestClient) -> TestClient:
+    return as_role(client, "viewer")
+
+
+@pytest.fixture
+def admin_client(client: TestClient) -> TestClient:
+    return as_role(client, "admin")

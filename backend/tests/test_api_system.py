@@ -28,8 +28,12 @@ def test_valid_request_id_is_propagated_and_invalid_one_replaced(client):
     assert replaced != "<script>" and replaced.isalnum()
 
 
-def test_system_health_reports_resources_limits_jobs_and_db(client):
-    body = client.get("/api/system/health").json()
+def test_system_health_requires_authentication(client):
+    assert client.get("/api/system/health").status_code == 401
+
+
+def test_system_health_reports_resources_limits_jobs_and_db(viewer_client):
+    body = viewer_client.get("/api/system/health").json()
     assert body["status"] in {"ok", "degraded"}
     assert body["database"] == {"ok": True, "engine": "sqlite", "size_bytes": body["database"]["size_bytes"]}
     assert body["resources"]["available_ram_mb"] == 4096
@@ -38,9 +42,9 @@ def test_system_health_reports_resources_limits_jobs_and_db(client):
     assert "secret" not in str(body).lower().replace("aegis_secret_key", "")
 
 
-def test_system_health_warns_on_low_memory(client, probe):
+def test_system_health_warns_on_low_memory(viewer_client, probe):
     probe.available_ram_mb = 100
-    body = client.get("/api/system/health").json()
+    body = viewer_client.get("/api/system/health").json()
     assert body["status"] == "degraded"
     assert any("Free RAM" in w for w in body["warnings"])
 

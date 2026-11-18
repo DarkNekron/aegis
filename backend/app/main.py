@@ -16,7 +16,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app import __version__
-from app.api import system
+from app.api import auth, system, users
 from app.core.config import Settings, get_settings
 from app.core.jobs import JobRunner
 from app.core.logging import configure_logging
@@ -25,6 +25,8 @@ from app.core.resources import ResourceManager
 from app.db.session import Database
 from app.graph_engine.cache import GraphCache
 from app.graph_engine.service import GraphService
+from app.security.rate_limit import RateLimiter
+from app.security.sessions import SessionManager
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +47,8 @@ def create_app(settings: Settings | None = None, *, resources: ResourceManager |
         app.state.resources = rm
         app.state.jobs = JobRunner(settings, rm)
         app.state.graphs = GraphService(db, rm, GraphCache(settings.graph_cache_size))
+        app.state.sessions = SessionManager(settings)
+        app.state.rate_limiter = RateLimiter()
         app.state.started_monotonic = time.monotonic()
         logger.info("AEGIS %s started (%s, db=%s)", __version__, settings.env,
                     "sqlite" if settings.is_sqlite else "external")
@@ -68,6 +72,8 @@ def create_app(settings: Settings | None = None, *, resources: ResourceManager |
     app.add_middleware(RequestContextMiddleware)
     install_error_handlers(app)
     app.include_router(system.router)
+    app.include_router(auth.router)
+    app.include_router(users.router)
     return app
 
 

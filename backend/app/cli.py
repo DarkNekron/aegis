@@ -4,11 +4,13 @@
     python -m app.cli create-snapshot "Corp AD - Nov 2026" [--sample]
     python -m app.cli import <snapshot-id> <file.zip|.json|.csv>
     python -m app.cli analyze <snapshot-id> [--top 10]
+    python -m app.cli create-user <username> --role admin|analyst|viewer   (password prompted, never an argument)
 """
 
 from __future__ import annotations
 
 import argparse
+import getpass
 import json
 import sys
 from pathlib import Path
@@ -25,7 +27,9 @@ from app.graph_engine.cache import GraphCache
 from app.graph_engine.service import GraphService
 from app.ingestion.service import ImportService
 from app.models import Snapshot
+from app.security.audit import audit
 from app.services.analysis_service import AnalysisService
+from app.services.user_service import create_user
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -42,6 +46,9 @@ def main(argv: list[str] | None = None) -> int:
     ana = sub.add_parser("analyze", help="run an attack-path analysis on a snapshot")
     ana.add_argument("snapshot_id", type=int)
     ana.add_argument("--top", type=int, default=10, help="how many paths to print")
+    usr = sub.add_parser("create-user", help="create a user (use this to bootstrap the first administrator)")
+    usr.add_argument("username")
+    usr.add_argument("--role", choices=["admin", "analyst", "viewer"], required=True)
     args = parser.parse_args(argv)
 
     settings = get_settings()
@@ -76,6 +83,16 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps({"status": result.status, "import_job_id": result.import_job_id, **result.summary},
                              indent=2, default=str))
             return 0 if result.status in ("succeeded", "partial") else 1
+        elif args.command == "create-user":
+            password = getpass.getpass("Password: ")
+            if password != getpass.getpass("Repeat password: "):
+                print("Passwords do not match.", file=sys.stderr)
+                return 2
+            with db.session() as s:
+                user = create_user(s, args.username, password, args.role)
+                audit(s, "user_create", "success", username="cli", target_type="user", target_id=user.id,
+                      detail={"role": args.role, "new_user": user.username, "via": "cli"})
+                print(f"Created {args.role} '{user.username}'.")
         elif args.command == "analyze":
             resources = ResourceManager(settings)
             analyses = AnalysisService(db, settings, GraphService(db, resources, GraphCache(1)))

@@ -295,5 +295,5 @@ def test_concurrent_requests_build_once(env):
     assert len(calls) == 1 and len({id(r) for r in results}) == 1
 
 
-def test_health_endpoint_reports_cache(client):
-    assert client.get("/api/system/health").json()["graph_cache"]["capacity"] == 1
+def test_health_endpoint_reports_cache(viewer_client):
+    assert viewer_client.get("/api/system/health").json()["graph_cache"]["capacity"] == 1

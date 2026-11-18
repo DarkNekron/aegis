@@ -1,7 +1,7 @@
 """Liveness and system-health endpoints (the data behind the System Health page).
 
-Note: ``/api/system/*`` becomes authenticated (viewer role or higher) in the security stage
-(roadmap 5.0). ``/api/health`` stays public and reveals nothing beyond "up" and the version.
+``/api/system/*`` requires an authenticated user (viewer role or higher). ``/api/health`` is public
+and reveals nothing beyond "up" and the version.
 """
 
 from __future__ import annotations
@@ -17,6 +17,7 @@ from app.core.config import Settings
 from app.core.jobs import JobRunner
 from app.core.resources import ResourceManager
 from app.db.session import Database
+from app.security.deps import Principal, require_role
 
 router = APIRouter(prefix="/api", tags=["system"])
 
@@ -33,6 +34,7 @@ def system_health(
     resources: Annotated[ResourceManager, Depends(get_resources)],
     jobs: Annotated[JobRunner, Depends(get_jobs)],
     db: Annotated[Database, Depends(get_database)],
+    _viewer: Annotated[Principal, Depends(require_role("viewer"))],
 ) -> dict[str, Any]:
     snap = resources.snapshot()
     try:

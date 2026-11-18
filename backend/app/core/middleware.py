@@ -84,7 +84,11 @@ def _error(status: int, code: str, message: str, request: Request, details: list
 def install_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(AegisError)
     async def _aegis(request: Request, exc: AegisError) -> JSONResponse:
-        return _error(exc.http_status, exc.code, exc.message, request)
+        response = _error(exc.http_status, exc.code, exc.message, request)
+        retry_after = getattr(exc, "retry_after", None)
+        if retry_after:
+            response.headers["Retry-After"] = str(retry_after)
+        return response
 
     @app.exception_handler(RequestValidationError)
     async def _validation(request: Request, exc: RequestValidationError) -> JSONResponse:
