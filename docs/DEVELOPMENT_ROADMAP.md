@@ -21,8 +21,8 @@ Status legend: ✅ done · 🔄 in progress · ⏳ pending
 | 3.7 | Module 7 — Comparison | object/edge/path diffs, change report | Diff tests across two snapshots | ✅ matches corp-small→v2 ground truth; 3.1 s / +0 MB at 114k relationships |
 | 3.8 | Module 8 — Reporting | HTML, PDF and JSON with all 13 sections | Reports generate from sample data | ✅ PDF/HTML/JSON, 13 sections + change section; hostile-name tests |
 | 4 | Frontend + Module 5 | 10 pages, Cytoscape explorer, filtering and incremental expansion | `tsc`, build, manual walkthrough | ✅ strict tsc + build; headless-Edge walkthrough of all pages, no console or CSP errors |
-| 6 | Validation | integration tests, benchmarks with measured time and peak RAM | `BENCHMARKS.md` from real runs | ⏳ |
-| 7 | Docs & GitHub readiness | README, install, API, dev, testing, security, datasets, troubleshooting | Fresh-clone install works | ⏳ |
+| 6 | Validation | integration tests, benchmarks with measured time and peak RAM | `BENCHMARKS.md` from real runs | ✅ 326 tests; measured ingestion, graph, analysis, simulation, comparison; browser walkthrough |
+| 7 | Docs & GitHub readiness | README, install, API, dev, testing, security, datasets, troubleshooting | Fresh-clone install works | ✅ clone → setup (78 s) → 326 tests → sample data → login & UI |
 
 The security layer is built **before** the modules that add state-changing endpoints. That way every later endpoint is protected
 from the moment it exists.
@@ -115,3 +115,13 @@ from the moment it exists.
   page with interactions (path selection, identity search and neighbourhood graph, comparison). It reported no
   JavaScript exceptions and no CSP violations. The screenshots led to three visual fixes: graph over-zoom, badge
   alignment and duplicate simulator suggestions.
+
+**Phases 6, 7 and 9 Validation, docs and acceptance (done 2026-11-18)**
+* Fresh clone in an empty folder: `scripts\setup.ps1 -Dev` finished in 78 s (exit 0) and handled Smart App Control
+  automatically. All 326 tests passed in the new copy. `load_sample_data.ps1` imported and analysed both samples, the
+  UI and client routes were served, login worked, health was `ok` with no warnings (the generated secret was in use),
+  and RSS was 119 MB.
+* Docs: README, INSTALLATION, TESTING, TROUBLESHOOTING, an updated DEVELOPER_GUIDE, and ARCHITECTURE §12 (revised
+  decisions).
+* Not verified on this machine: the Docker image (no Docker installed) and Linux/macOS installs. These are documented
+  as untested.

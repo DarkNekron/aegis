@@ -243,3 +243,15 @@ built from object IDs, which are stable across snapshots, rather than from datab
 | Live LDAP collection | Out of scope. AEGIS stays offline and read-only by design. |
 | ADCS (ESC1–ESC8) analysis | Parsed and stored as nodes. Traversal rules are a later enhancement. |
 | GPU acceleration | Not needed |
+
+## 12. Decisions revised during implementation
+
+| Area | Original plan | What was built, and why |
+|---|---|---|
+| Environment risk | 50% worst path, 30% *mean* identity score, 20% breadth | The mean **rose** when low-scoring identities were secured (found by the simulation tests). It was replaced by a capped **exposure mass**, so every component is monotone. A property test guards it ([RISK_SCORING.md](RISK_SCORING.md) §4). |
+| Graph memory estimate | 700 B/node, 500 B/edge | Measured 87 MB for 28k nodes / 96k edges, 35% higher than estimated. Now 1,100 / 700 B with headroom. |
+| Bulk allocation speed | – | CPython's cyclic GC dominated index and graph builds. GC is paused during acyclic bulk allocation (`gc_paused()`): 2.2 s → 0.6 s. |
+| SPA serving | Static mount plus catch-all route | A catch-all shadows routes registered later. The UI is served from the **404 handler** instead, so route order never matters and `/api/*` 404s stay JSON. |
+| Uploads | Multipart `UploadFile` | Multipart spools the whole file to disk before the handler runs. Uploads are now the **raw request body**, so the size limit is enforced while streaming. |
+| SQLAlchemy | Binary wheel | Smart App Control blocks its unsigned Cython extension. The same version is installed as pure Python, automatically by setup. |
+| Parallel edges | One path per edge | Collapsed into one step that records the alternatives, to avoid near-duplicate paths |
