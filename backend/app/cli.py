@@ -3,6 +3,7 @@
     python -m app.cli snapshots
     python -m app.cli create-snapshot "Corp AD - Nov 2026" [--sample]
     python -m app.cli import <snapshot-id> <file.zip|.json|.csv>
+    python -m app.cli analyze <snapshot-id> [--top 10]
 """
 
 from __future__ import annotations
@@ -20,8 +21,11 @@ from app.core.jobs import CancellationToken
 from app.core.logging import configure_logging
 from app.core.resources import ResourceManager
 from app.db.session import Database
+from app.graph_engine.cache import GraphCache
+from app.graph_engine.service import GraphService
 from app.ingestion.service import ImportService
 from app.models import Snapshot
+from app.services.analysis_service import AnalysisService
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -35,6 +39,9 @@ def main(argv: list[str] | None = None) -> int:
     imp = sub.add_parser("import", help="import a data file into a snapshot")
     imp.add_argument("snapshot_id", type=int)
     imp.add_argument("file", type=Path)
+    ana = sub.add_parser("analyze", help="run an attack-path analysis on a snapshot")
+    ana.add_argument("snapshot_id", type=int)
+    ana.add_argument("--top", type=int, default=10, help="how many paths to print")
     args = parser.parse_args(argv)
 
     settings = get_settings()
@@ -69,6 +76,19 @@ def main(argv: list[str] | None = None) -> int:
             print(json.dumps({"status": result.status, "import_job_id": result.import_job_id, **result.summary},
                              indent=2, default=str))
             return 0 if result.status in ("succeeded", "partial") else 1
+        elif args.command == "analyze":
+            resources = ResourceManager(settings)
+            analyses = AnalysisService(db, settings, GraphService(db, resources, GraphCache(1)))
+            analysis_id = analyses.run(args.snapshot_id)
+            summary = analyses.get(analysis_id).summary
+            env = summary["environment_risk"]
+            print(f"Analysis {analysis_id}: environment risk {env['score']} ({env['severity']}); "
+                  f"{summary['exposed_sources']} of {summary['sources_total']} identities exposed; "
+                  f"{summary['paths_total']} paths {summary['paths_by_severity']}; "
+                  f"min cut {summary['min_cut']['size']}")
+            _, paths = analyses.list_paths(analysis_id, limit=max(1, min(args.top, 500)))
+            for p in paths:
+                print(f"  {p.score:6.2f} {p.severity:<8} {p.hops} hop(s) {p.classification:<31} {p.details['summary']}")
     except AegisError as exc:
         print(f"\nError ({exc.code}): {exc.message}", file=sys.stderr)
         return 1

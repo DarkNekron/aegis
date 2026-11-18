@@ -41,6 +41,7 @@ class AttackPath(Base):
     __table_args__ = (
         Index("ix_attack_paths_analysis_score", "analysis_id", "score"),
         Index("ix_attack_paths_signature", "signature"),
+        Index("ix_attack_paths_analysis_severity", "analysis_id", "severity"),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -54,6 +55,9 @@ class AttackPath(Base):
     score: Mapped[float] = mapped_column(Float, nullable=False)
     severity: Mapped[str] = mapped_column(String(16), nullable=False)
     score_breakdown: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+    # Self-contained explanation (nodes, steps, conditions, narrative) so reports and the UI do not
+    # need the in-memory graph.
+    details: Mapped[dict[str, Any] | None] = mapped_column(JSON)
     # Stable across snapshots: hash of the ordered (object_id, edge kind) sequence.
     signature: Mapped[str] = mapped_column(String(64), nullable=False)
     validated_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))

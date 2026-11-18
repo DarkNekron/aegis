@@ -47,6 +47,7 @@ class ADGraph:
     tier0_reasons: dict[int, list[str]]
     sources: frozenset[int]
     derived_evidence: dict[str, list[int]] = field(default_factory=dict)
+    tier0_categories: dict[int, frozenset[str]] = field(default_factory=dict)
     stats: BuildStats = field(default_factory=BuildStats)
 
     def view(self, *, removed_edges: Iterable[EdgeRef] = (), disabled_nodes: Iterable[int] = (),

@@ -149,7 +149,8 @@ class GraphBuilder:
         logger.info("Built graph for snapshot %s: %s nodes, %s edges (%s traversable), %s tier-0, %.2fs",
                     snapshot_id, stats.nodes, stats.edges, stats.traversable_edges, stats.tier0, stats.build_seconds)
         return ADGraph(snapshot_id=snapshot_id, version=version, config=config, g=g, tier0=tier0,
-                       tier0_reasons=reasons, sources=sources, derived_evidence=derived_evidence, stats=stats)
+                       tier0_reasons=reasons, sources=sources, derived_evidence=derived_evidence, stats=stats,
+                       tier0_categories={n: frozenset(classifier.categories[n]) for n in tier0})
 
     def _persist_tier0(self, snapshot_id: int, reasons: dict[int, list[str]]) -> None:
         """Store the classification so list views and reports can filter on it without the graph."""

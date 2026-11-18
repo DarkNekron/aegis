@@ -60,22 +60,27 @@ class Tier0Classifier:
         self.enabled = set(config.tier0_categories)
         self.custom = set(config.custom_tier0_object_ids)
         self.reasons: dict[int, list[str]] = defaultdict(list)
+        self.categories: dict[int, set[str]] = defaultdict(set)
         self.hints: set[int] = set()
 
     def observe(self, node: int, facts: NodeFacts) -> None:
         category = seed_category(facts)
         if category and category in self.enabled:
             self.reasons[node].append(f"{category.replace('_', ' ')}: {facts.name}")
+            self.categories[node].add(category)
         if facts.object_id in self.custom:
             self.reasons[node].append("designated tier-0 by an administrator")
+            self.categories[node].add("custom")
         if facts.hinted:
             self.hints.add(node)
             if self.config.trust_input_hints:
                 self.reasons[node].append("marked high-value in the imported data")
+                self.categories[node].add("hint")
 
     def add_dcsync(self, node: int, domain_name: str) -> None:
         if "dcsync" in self.enabled:
             self.reasons[node].append(f"holds DCSync rights on {domain_name}")
+            self.categories[node].add("dcsync")
 
     def finish(self, member_of: dict[int, list[int]], names: dict[int, str]) -> dict[int, list[str]]:
         """Propagate tier-0 status to transitive members. ``member_of`` maps group -> direct members."""
@@ -84,8 +89,14 @@ class Tier0Classifier:
         while queue:
             group = queue.popleft()
             for member in member_of.get(group, ()):
-                if member not in tier0:
+                newly_tier0 = member not in tier0
+                if newly_tier0:
                     tier0.add(member)
                     self.reasons[member].append(f"member of {names.get(group, group)}")
+                # Inherit the group's privilege categories. Re-queue whenever a member gains a category,
+                # so someone in both Backup Operators and Domain Admins ends up with both (fixpoint).
+                gained = self.categories[group] - self.categories[member]
+                if newly_tier0 or gained:
+                    self.categories[member] |= self.categories[group]
                     queue.append(member)
         return {node: self.reasons[node] for node in tier0}

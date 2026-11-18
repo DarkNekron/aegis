@@ -14,7 +14,7 @@ Status legend: ✅ done · 🔄 in progress · ⏳ pending
 | 3.2 | Synthetic datasets | generator + 3 fixed datasets with documented ground truth | Datasets validate against the ingestion engine | ✅ ground truth verified by an independent reference checker (17 tests) |
 | 3.3 | Module 2 — Graph construction | rules table, builder, tier-0 classifier, DCSync derivation, graph cache | Tests: edge semantics, unknown kinds not traversed | ✅ engine matches the reference on all datasets; 20k-user graph: 0.9 s, 87 MB |
 | 3.4 | Module 3 — Attack-path engine | reverse Dijkstra, Yen k-paths, bounded DFS, dedup, min-cut, sampled betweenness, explanations | Ground-truth path tests pass | ✅ exact match on all datasets; 40 random-graph oracle checks; 20k users analysed in 0.67 s |
-| 3.5 | Module 4 — Risk engine | scoring model, configurable weights, `RISK_SCORING.md` | Deterministic score tests | ⏳ |
+| 3.5 | Module 4 — Risk engine | scoring model, configurable weights, `RISK_SCORING.md` | Deterministic score tests | ✅ worked example exact (81.90); analyses and paths persisted |
 | 5.0 | Security layer | auth, sessions, CSRF, RBAC, rate limit, audit log, headers | AuthN/AuthZ tests per role | ⏳ |
 | 3.6 | Module 6 — Simulation | view-based what-if, all action types | Original graph unchanged (tested) | ⏳ |
 | 3.7 | Module 7 — Comparison | object/edge/path diffs, change report | Diff tests across two snapshots | ⏳ |
@@ -55,3 +55,10 @@ from the moment it exists.
   (Edmonds–Karp min-cut) and centrality (sampled Brandes). NetworkX's algorithms appear only in tests, as oracles.
 * Paths are ranked provisionally by (hops, cost, confidence). Stage 3.5 replaces this with the transparent risk score
   and persists analyses and paths.
+
+**3.5 Risk engine (done 2026-11-18)**
+* `docs/RISK_SCORING.md` documents every factor, the default weights, the bands, the conditional cap and the
+  environment score, with a worked example that a test keeps exact.
+* `AnalysisService` persists analyses and scored paths with self-contained explanations (`attack_paths.details`),
+  supports paginated and filtered queries, and handles analyst validation.
+* Next, by design: stage **5.0 security layer**, then the HTTP API for imports and analyses behind it.
