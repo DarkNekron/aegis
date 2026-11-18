@@ -82,3 +82,8 @@ Docker files will be written in Phase 7, but they **cannot be tested on this mac
 powershell -ExecutionPolicy Bypass -File scripts\setup_backend.ps1 -Dev
 cd frontend; npm ci
 ```
+
+## Addendum (stage 3.0)
+| # | Issue | Resolution |
+|---|---|---|
+| 9 | Smart App Control also blocks pip's unsigned **console-script launchers** (`pytest.exe`, `uvicorn.exe`, `alembic.exe`). `ruff.exe` is a real signed binary and works. | Always invoke tools as modules: `python -m pytest`, `python -m uvicorn`, `python -m alembic`. `scripts/run_backend.ps1` does this. |

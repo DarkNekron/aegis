@@ -103,7 +103,9 @@ roughly **1.0 – 1.5 GB in total** across the backend, the browser tab and any 
 | Setting | Default | Rationale |
 |---|---|---|
 | `AEGIS_MAX_ANALYSIS_WORKERS` | 1 | Graph analysis is CPU-bound Python under the GIL. More workers would duplicate the graph in RAM. |
-| `AEGIS_MAX_CONCURRENT_JOBS` | 1 heavy + 2 light | Prevents two graph traversals from running at once |
+| `AEGIS_MAX_LIGHT_WORKERS` | 2 | Imports and small jobs. Heavy analysis stays at 1 worker, so two graph traversals never run at once. |
+| `AEGIS_MAX_PENDING_JOBS` | 8 | Back-pressure: extra submissions are refused with HTTP 503 |
+| `AEGIS_MIN_FREE_DISK_MB` | 1024 | Imports and reports refused below this |
 | `AEGIS_JOB_TIMEOUT_SECONDS` | 180 | Long jobs are cancelled cooperatively |
 | `AEGIS_MIN_FREE_RAM_MB` | 768 | Heavy jobs are refused (HTTP 503 with an explanation) below this |
 | `AEGIS_MAX_GRAPH_NODES` | 150 000 | Roughly a 40k-user domain with computers and groups |
