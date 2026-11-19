@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { NekronProvider } from "./components/Nekron";
 import { Spinner } from "./components/ui";
 import { LoginPage } from "./pages/LoginPage";
 import { SessionProvider, useSession } from "./services/session";
@@ -24,6 +25,7 @@ function Routed() {
   if (loading) return <div className="p-8"><Spinner label="Starting AEGIS" /></div>;
   if (!user) return <LoginPage />;
   return (
+    <NekronProvider>
     <Suspense fallback={<div className="p-8"><Spinner /></div>}>
       <Routes>
         <Route element={<Layout />}>
@@ -41,6 +43,7 @@ function Routed() {
         </Route>
       </Routes>
     </Suspense>
+    </NekronProvider>
   );
 }
 

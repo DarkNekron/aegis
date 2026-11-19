@@ -23,6 +23,7 @@ you change anything, compares assessments over time and produces penetration-tes
 | **Remediation simulation** | Remove relationships, memberships, ACLs, admin rights or sessions, disable identities, or apply the minimum cut, all on an isolated view of the graph, with before/after paths, exposure and risk. |
 | **Historical comparison** | Objects, relationships, privilege, attack paths and risk between snapshots, matched on SIDs and GUIDs, so renames are tracked. |
 | **Reports** | PDF, HTML and JSON with 13 sections (executive summary to conclusion), evidence tables, and a minimum-cut recommendation backed by simulation. |
+| **Built-in guide** | **Nekron**, a step-by-step walkthrough of every page. It opens on each user's first sign-in and can be skipped. Call it back any time with the sidebar *Nekron · Help* button, the floating moon button, or the `?` key. On a page, it opens that page's help. |
 | **Security** | Argon2id, server-side hashed sessions, CSRF tokens, admin / analyst / viewer roles, rate limiting, lockout, audit log, strict CSP, no default credentials. See [SECURITY.md](docs/SECURITY.md). |
 
 | Attack Path Explorer | Identity Explorer |
@@ -41,6 +42,8 @@ powershell -ExecutionPolicy Bypass -File scripts\setup.ps1 -Admin admin   # venv
 powershell -ExecutionPolicy Bypass -File scripts\load_sample_data.ps1    # optional: synthetic sample environment
 powershell -ExecutionPolicy Bypass -File scripts\run_backend.ps1         # then open http://127.0.0.1:8000
 ```
+
+New to AEGIS? Sign in and **Nekron**, the built-in guide, walks you through each page.
 
 On a fresh clone, setup finished in **78 s** on the development laptop. Details, Linux and macOS steps, and Docker are in
 [INSTALLATION.md](docs/INSTALLATION.md).
