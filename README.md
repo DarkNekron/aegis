@@ -7,6 +7,10 @@ collected, from SharpHound / BloodHound CE or your own inventories, and rebuilds
 transparently. AEGIS also computes the smallest set of fixes that breaks every path, simulates remediation before
 you change anything, compares assessments over time and produces penetration-test reports.
 
+**▶ Watch the 1-minute narrated overview:**
+
+[![AEGIS in one minute (click to play)](docs/media/video-thumbnail.png)](docs/media/aegis-overview.mp4)
+
 ![Overview dashboard](docs/images/overview.png)
 
 > AEGIS never connects to, collects from or modifies a directory. Use it only on data from environments you are
