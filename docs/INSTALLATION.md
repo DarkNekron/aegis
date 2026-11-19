@@ -60,7 +60,19 @@ powershell -ExecutionPolicy Bypass -File scripts\load_sample_data.ps1
 **Measured on the development laptop (fresh clone):** setup took 78 s. The 326 tests passed in the new copy. Sample data loaded,
 login worked, the UI was served and the server used 119 MB.
 
-## Linux / macOS (manual steps)
+## Linux / macOS
+Prerequisites: Python 3.12 (with `venv`), Node.js ≥ 20.19, Git, and on Linux `fonts-dejavu-core` for PDF reports.
+The README has copy-paste commands for Ubuntu/Debian, Fedora and macOS.
+
+```bash
+git clone https://github.com/DarkNekron/aegis.git && cd aegis
+chmod +x scripts/*.sh
+./scripts/setup.sh               # venv + pinned deps, UI build, .env with a generated secret key (--dev adds test tools)
+./scripts/load_sample_data.sh    # optional: synthetic sample environment
+./scripts/run_backend.sh         # http://127.0.0.1:8000  (--port N, --reload)
+```
+The shell scripts are the counterparts of the PowerShell scripts. They are syntax-checked but have not yet been run
+on a real Linux or macOS machine. If one fails, the equivalent manual steps are:
 ```bash
 python3.12 -m venv backend/.venv
 backend/.venv/bin/pip install -r backend/requirements.txt
@@ -70,7 +82,6 @@ cd backend
 .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 Then open the page and complete first-run setup with the code printed in the terminal.
-These steps mirror the Windows scripts but were not run on Linux or macOS during development.
 
 ## Docker (optional, untested here)
 `deployment/Dockerfile` and `docker-compose.yml` build a non-root, read-only container. It has all capabilities

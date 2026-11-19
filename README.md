@@ -87,22 +87,97 @@ flowchart LR
 
 ## Quick start
 
-**Requirements:** Windows 10/11, Python 3.12, Node.js ≥ 20.19 and Git. No administrator rights, no Docker and no
-database server are needed. Linux, macOS and Docker steps are in [INSTALLATION.md](docs/INSTALLATION.md).
+AEGIS runs on **Windows** and **Linux** (and macOS). You need **Python 3.12**, **Node.js 20.19 or newer** and **Git**.
+No administrator rights, no Docker and no database server are needed. Everything stays inside the `aegis` folder.
 
+| | Windows 10 / 11 | Linux / macOS |
+|---|---|---|
+| Status | ✅ Tested (fresh clone, all tests) | ⚠️ Same code; the shell scripts are new and not yet run on a real Linux machine |
+
+### 🪟 Windows
+
+**1. Install the prerequisites** (once). In PowerShell:
+```powershell
+winget install -e --id Python.Python.3.12
+winget install -e --id OpenJS.NodeJS.LTS
+winget install -e --id Git.Git
+```
+Close and reopen PowerShell afterwards so the new commands are found. You can also use the installers from
+[python.org](https://www.python.org/downloads/), [nodejs.org](https://nodejs.org) and [git-scm.com](https://git-scm.com).
+
+**2. Download and set up AEGIS:**
 ```powershell
 git clone https://github.com/DarkNekron/aegis.git
 cd aegis
 powershell -ExecutionPolicy Bypass -File scripts\setup.ps1             # Python venv, dependencies, UI build, .env with a random secret key
 powershell -ExecutionPolicy Bypass -File scripts\load_sample_data.ps1  # optional: synthetic practice domain
-powershell -ExecutionPolicy Bypass -File scripts\run_backend.ps1       # start AEGIS
 ```
 
-Then open **<http://127.0.0.1:8000>** and follow the first-run screen (next section). On a fresh clone, setup took
-**78 s** on the development laptop.
+**3. Start AEGIS** (every time you want to use it):
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\run_backend.ps1
+```
+Keep this window open while you use AEGIS. Press `Ctrl+C` to stop it.
 
 > `-ExecutionPolicy Bypass` applies only to that one PowerShell process. It changes no system setting. The scripts are
-> short, so read them first if you like.
+> short, so read them first if you like. On a fresh clone, setup took **78 s** on the development laptop.
+
+### 🐧 Linux (Ubuntu / Debian shown)
+
+**1. Install the prerequisites** (once):
+```bash
+sudo apt update
+sudo apt install -y git python3.12 python3.12-venv curl
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -   # Node.js 22 LTS
+sudo apt install -y nodejs fonts-dejavu-core                        # DejaVu fonts make PDF reports look right
+```
+If your distribution has no `python3.12` package (e.g. Ubuntu 22.04), add it with
+`sudo add-apt-repository ppa:deadsnakes/ppa`, or use [pyenv](https://github.com/pyenv/pyenv). On Fedora, run
+`sudo dnf install git python3.12 nodejs npm dejavu-sans-fonts`.
+
+**2. Download and set up AEGIS:**
+```bash
+git clone https://github.com/DarkNekron/aegis.git
+cd aegis
+chmod +x scripts/*.sh
+./scripts/setup.sh              # Python venv, dependencies, UI build, .env with a random secret key
+./scripts/load_sample_data.sh   # optional: synthetic practice domain
+```
+
+**3. Start AEGIS** (every time you want to use it):
+```bash
+./scripts/run_backend.sh        # add --port 8001 to use another port
+```
+Keep the terminal open while you use AEGIS. Press `Ctrl+C` to stop it.
+
+<details>
+<summary>macOS (Homebrew)</summary>
+
+```bash
+brew install git python@3.12 node
+git clone https://github.com/DarkNekron/aegis.git && cd aegis
+chmod +x scripts/*.sh && ./scripts/setup.sh && ./scripts/run_backend.sh
+```
+</details>
+
+### Then, on any system
+
+1. Open **<http://127.0.0.1:8000>** in your browser.
+2. Create your administrator account using the **setup code** shown in the AEGIS window. See
+   [Signing in](#signing-in-no-default-passwords).
+3. **Nekron**, the built-in guide, opens and walks you through every page. Press **`?`** any time to call him back.
+
+### Updating, testing and uninstalling
+
+| Task | Windows | Linux / macOS |
+|---|---|---|
+| Update to the latest version | `git pull` then rerun `scripts\setup.ps1` | `git pull` then rerun `./scripts/setup.sh` |
+| Run the test suite | `powershell -ExecutionPolicy Bypass -File scripts\setup_backend.ps1 -Dev` then `cd backend; .venv\Scripts\python.exe -m pytest` | `./scripts/setup.sh --dev` then `cd backend && .venv/bin/python -m pytest` |
+| Uninstall | Delete the `aegis` folder | Delete the `aegis` folder |
+
+Your data (database and reports) lives in the `aegis/data` folder. Back it up before deleting anything. Docker
+instructions and every configuration option are in [INSTALLATION.md](docs/INSTALLATION.md). If something goes wrong,
+see [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
 ## Signing in: no default passwords
 
