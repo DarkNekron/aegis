@@ -28,6 +28,7 @@ from app.graph_engine.cache import GraphCache
 from app.graph_engine.service import GraphService
 from app.ingestion.service import ImportService
 from app.reporting.service import ReportService
+from app.security.first_run import FirstRunSetup
 from app.security.rate_limit import RateLimiter
 from app.security.sessions import SessionManager
 from app.services.analysis_service import AnalysisService
@@ -58,6 +59,9 @@ def create_app(settings: Settings | None = None, *, resources: ResourceManager |
         app.state.reports = ReportService(db, settings, app.state.graphs)
         app.state.sessions = SessionManager(settings)
         app.state.rate_limiter = RateLimiter()
+        app.state.first_run = FirstRunSetup(settings)
+        with db.session() as s:
+            app.state.first_run.prepare(s)
         app.state.started_monotonic = time.monotonic()
         logger.info("AEGIS %s started (%s, db=%s)", __version__, settings.env,
                     "sqlite" if settings.is_sqlite else "external")

@@ -53,7 +53,7 @@ def db_session(request: Request) -> Iterator[Session]:
     yield from request.app.state.db.session_scope()
 
 
-def _origin_ok(request: Request) -> bool:
+def origin_ok(request: Request) -> bool:
     origin = request.headers.get("origin")
     if not origin:
         return True  # same-origin fetches from older browsers / non-browser clients; CSRF token still required
@@ -68,7 +68,7 @@ def current_principal(request: Request, db: Annotated[Session, Depends(db_sessio
         raise NotAuthenticatedError("Authentication required.")
     row, user = resolved
     if request.method not in SAFE_METHODS:
-        if not _origin_ok(request):
+        if not origin_ok(request):
             raise ForbiddenError("Cross-origin request rejected.")
         if not manager.check_csrf(row, request.headers.get(CSRF_HEADER)):
             raise ForbiddenError("Missing or invalid CSRF token.")

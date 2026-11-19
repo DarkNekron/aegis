@@ -2,7 +2,7 @@
 
 ```powershell
 cd backend
-.venv\Scripts\python.exe -m pytest              # 326 tests, about 1 minute
+.venv\Scripts\python.exe -m pytest              # 338 tests, about 1 minute
 .venv\Scripts\python.exe -m pytest --cov        # with coverage (97%)
 .venv\Scripts\ruff.exe check app tests migrations ..\scripts
 cd ..\frontend; npm run typecheck; npm run build
@@ -22,7 +22,7 @@ Use `python -m pytest`, not `pytest.exe`. Windows Smart App Control blocks pip's
 | Simulation | `test_simulation` | Ground-truth what-ifs, every action type, graph and database unchanged, **environment risk never rises when any relationship is removed** |
 | Comparison | `test_comparison` | corp-small → v2 ground truth, symmetry, renames matched on SID |
 | Reporting | `test_reporting` | 13 sections, real numbers, hostile names inert in HTML and PDF, attachment downloads, path confinement |
-| Security | `test_security` | Hashing, lockout, rate limits, session expiry and revocation, CSRF and Origin checks, roles for every user, audit |
+| Security | `test_security`, `test_first_run` | First-run setup code (single use, rate-limited, cross-origin refused, no default accounts), hashing, lockout, rate limits, session expiry and revocation, CSRF and Origin checks, roles for every user, audit |
 | API & UI serving | `test_api`, `test_spa` | Upload → job → analysis → paths → evidence → graph → dashboard. Viewer is read-only. SPA never shadows the API. |
 
 ## Writing tests

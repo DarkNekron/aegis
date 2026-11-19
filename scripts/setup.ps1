@@ -1,12 +1,13 @@
 <#
 .SYNOPSIS
   One-time setup of AEGIS on Windows: backend venv + pinned dependencies, frontend dependencies and build,
-  a local .env with a generated secret key, and (optionally) the first administrator account.
+  a local .env with a generated secret key. There are no default credentials: on first start, AEGIS asks you in the
+  browser to create your own administrator account, using a one-time setup code shown in the server window.
 
 .PARAMETER Dev
   Also install backend development/test dependencies.
 .PARAMETER Admin
-  Username for an administrator account to create (you will be prompted for its password).
+  Optional: create the first administrator from the terminal instead of in the browser (password is prompted).
 #>
 param([switch]$Dev, [string]$Admin)
 $ErrorActionPreference = "Stop"
@@ -42,4 +43,4 @@ if ($Admin) {
     try { & .\.venv\Scripts\python.exe -m app.cli create-user $Admin --role admin } finally { Pop-Location }
 }
 Write-Host "Done. Start AEGIS with: powershell -ExecutionPolicy Bypass -File scripts\run_backend.ps1" -ForegroundColor Green
-Write-Host "Then open http://127.0.0.1:8000"
+Write-Host "Then open http://127.0.0.1:8000 and create your administrator account with the setup code shown in the server window."

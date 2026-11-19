@@ -2,7 +2,7 @@
 # Requires a .env in the repository root with AEGIS_SECRET_KEY set (scripts/setup.ps1 creates one).
 #
 #   docker compose up --build -d
-#   docker compose exec aegis python -m app.cli create-user admin --role admin
+#   docker compose logs aegis   # shows the one-time first-run setup code; then open http://127.0.0.1:8000
 name: aegis
 services:
   aegis:

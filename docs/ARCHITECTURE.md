@@ -229,8 +229,8 @@ built from object IDs, which are stable across snapshots, rather than from datab
   plus no `dangerouslySetInnerHTML`), reports autoescape in Jinja2, and imported flags like `highvalue` are only *hints*.
 * **Errors:** a generic message plus a correlation ID goes to the client, and details go to the server log. Secrets never appear in logs.
 * **Audit log** covers logins, imports, analyses, simulations, report generation, settings changes and user management.
-* **Secrets** come from `.env` (`AEGIS_SECRET_KEY`). The first admin is created with `scripts/create_admin.py`,
-  which prompts for the password interactively. There are no default credentials.
+* **Secrets** come from `.env` (`AEGIS_SECRET_KEY`). There are no default credentials. The owner creates the first
+  admin in the browser on first run, proven by a one-time setup code shown only on the server console (see SECURITY.md §2).
 * **Security headers:** a strict CSP that allows self and data: images, X-Content-Type-Options, X-Frame-Options DENY and Referrer-Policy.
 
 ## 11. What is postponed and why

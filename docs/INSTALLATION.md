@@ -16,7 +16,7 @@ file. Nothing else needs to run.
 ```powershell
 git clone <repository-url> aegis
 cd aegis
-powershell -ExecutionPolicy Bypass -File scripts\setup.ps1 -Admin admin
+powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
 ```
 `setup.ps1`:
 1. creates `backend\.venv` with Python 3.12 and installs the pinned requirements (`-Dev` adds test tools)
@@ -24,7 +24,7 @@ powershell -ExecutionPolicy Bypass -File scripts\setup.ps1 -Admin admin
    the same version as pure Python
 3. runs `npm ci` and builds the UI into `frontend\dist`
 4. creates `.env` from `.env.example` with a randomly generated `AEGIS_SECRET_KEY` (keep `.env` private)
-5. with `-Admin <name>`, creates an administrator and prompts for the password. Passwords are never command-line arguments.
+5. optional: `-Admin <name>` creates an administrator from the terminal instead (the password is prompted for, never an argument)
 
 `-ExecutionPolicy Bypass` applies only to that one PowerShell process. It changes no system setting.
 
@@ -32,6 +32,26 @@ Start AEGIS and open <http://127.0.0.1:8000>:
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\run_backend.ps1
 ```
+
+### First run: create your own administrator
+There are **no default credentials**. On a new installation, AEGIS prints a box like this in the server window:
+```
+================================================================
+  AEGIS FIRST-RUN SETUP
+  No accounts exist yet. Open AEGIS in your browser and enter this
+  one-time setup code to create your administrator account:
+
+      N6ZS-Z2D7-8Y3P-3YWT
+================================================================
+```
+1. Open <http://127.0.0.1:8000>. Instead of the sign-in form you see **Create your administrator account**.
+2. Enter the setup code, then choose your own username and password (12+ characters). AEGIS signs you in.
+3. Add colleagues under **Settings → Users** as Viewer, Analyst or Admin.
+
+The code is also saved to `data\first-run-setup-code.txt` in case the window is hidden. It works only once and is
+deleted after setup. Until setup is done, every restart issues a new code. Once an account exists, this screen never
+appears again.
+
 Optional synthetic sample data (two snapshots, analysed):
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\load_sample_data.ps1
@@ -47,9 +67,9 @@ backend/.venv/bin/pip install -r backend/requirements.txt
 (cd frontend && npm ci && npm run build)
 cp .env.example .env    # set AEGIS_SECRET_KEY: python -c "import secrets; print(secrets.token_urlsafe(48))"
 cd backend
-.venv/bin/python -m app.cli create-user admin --role admin
 .venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
+Then open the page and complete first-run setup with the code printed in the terminal.
 These steps mirror the Windows scripts but were not run on Linux or macOS during development.
 
 ## Docker (optional, untested here)
@@ -57,7 +77,7 @@ These steps mirror the Windows scripts but were not run on Linux or macOS during
 dropped, DejaVu fonts for PDF reports and a 2 GB memory limit, and is published on `127.0.0.1:8000` only.
 ```bash
 docker compose up --build -d
-docker compose exec aegis python -m app.cli create-user admin --role admin
+docker compose logs aegis | grep -A4 "FIRST-RUN SETUP"   # the one-time setup code for the first admin
 ```
 The files were written and reviewed but **not built**, because the development machine has no Docker. Treat the first
 build as a test.

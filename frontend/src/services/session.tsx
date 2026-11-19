@@ -10,6 +10,8 @@ interface SessionState {
   user: User | null;
   loading: boolean;
   login: (username: string, password: string) => Promise<void>;
+  /** First-run only: create the first administrator with the one-time setup code, then sign in. */
+  completeSetup: (setupCode: string, username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   can: (role: Role) => boolean;
   snapshotId: number | null;
@@ -58,6 +60,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setUser(result.user);
   }, []);
 
+  const completeSetup = useCallback(async (setupCode: string, username: string, password: string) => {
+    const result = await api.post<{ user: User; csrf_token: string }>("/api/auth/setup",
+      { setup_code: setupCode, username, password });
+    setCsrfToken(result.csrf_token);
+    setUser(result.user);
+  }, []);
+
   const logout = useCallback(async () => {
     try { await api.post("/api/auth/logout"); } finally { setCsrfToken(null); setUser(null); }
   }, []);
@@ -69,10 +78,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<SessionState>(() => ({
-    user, loading, login, logout,
+    user, loading, login, completeSetup, logout,
     can: (role: Role) => (user ? RANK[user.role] >= RANK[role] : false),
     snapshotId: selection.snapshotId, analysisId: selection.analysisId, select, dataVersion, bump,
-  }), [user, loading, login, logout, selection, select, dataVersion, bump]);
+  }), [user, loading, login, completeSetup, logout, selection, select, dataVersion, bump]);
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

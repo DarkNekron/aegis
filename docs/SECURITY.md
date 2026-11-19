@@ -18,9 +18,20 @@ owner; do not open public issues for them.
   when parameters change.
 * **Password policy:** 12–128 characters, must not contain the username, and very common or repetitive passwords
   are rejected.
-* **No default accounts.** The first administrator is created locally with
-  `python -m app.cli create-user <name> --role admin`. The password is prompted for and is never a command-line
-  argument, so it never reaches shell history or the process list.
+* **No default accounts: first-run setup.** A new installation has no users at all. On its first start AEGIS
+  shows a *Create your administrator account* screen. The owner chooses their own username and password there.
+  * To stop whoever reaches the page first from claiming the installation, setup needs a one-time **setup code**.
+    It has about 79 bits of entropy. It is printed only on the server console (never written to the log) and saved
+    to `data/first-run-setup-code.txt`, which only the machine's user can read.
+  * Only the SHA-256 of the code is kept in memory, and it is compared in constant time. Attempts share the login
+    rate limits and are audited (`first_run_setup`).
+  * The code is single-use. Its file is deleted after setup. A restart while setup is pending issues a new code.
+  * Once any account exists, `POST /api/auth/setup` is refused with `409` for good. A lock plus a re-check inside
+    the transaction stop two parallel requests from both succeeding.
+  * The same username and password policy applies, and the account is signed in immediately.
+  * Further accounts are created by an administrator (*Settings → Users*), or locally with
+    `python -m app.cli create-user <name> --role admin`. The CLI prompts for the password; it is never a
+    command-line argument.
 * **Uniform failure response:** every failed login, whether the user is unknown, the password is wrong, the account
   is locked or the account is inactive, returns the same `401 Invalid username or password.` For unknown users AEGIS
   still verifies against a dummy hash, so response timing does not reveal which usernames exist.

@@ -66,7 +66,7 @@ from the moment it exists.
 
 **5.0 Security layer (done 2026-11-18)**
 * Argon2id, server-side hashed sessions, CSRF token + Origin check, RBAC (admin/analyst/viewer), lockout, per-IP,
-  per-username and per-user rate limits, audit log, `create-user` CLI bootstrap. No default credentials.
+  per-username and per-user rate limits, audit log, browser first-run setup with a one-time console code (plus `create-user` CLI). No default credentials.
 * `/api/system/health` now requires the viewer role.
 * Next: **5.1 HTTP API** for snapshots, uploads (streaming `UploadWriter`), imports and analyses as background jobs,
   path browsing, analyst validation, graph neighbourhoods and settings, all behind these controls.

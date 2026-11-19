@@ -22,6 +22,8 @@ This page summarises the conventions and the endpoints.
 |---|---|---|
 | `GET /api/health` | public | Liveness: `{"status", "version"}` only |
 | `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me` · `GET /api/auth/csrf` | – / V | Session lifecycle |
+| `GET /api/auth/setup-status` | public | `{"needs_setup": bool}`: true only while no account exists |
+| `POST /api/auth/setup` | public, one-time | First run only: `{"setup_code", "username", "password"}` creates the first admin and signs in. `403 invalid_setup_code` for a wrong code; `409` once any user exists. |
 | `POST /api/auth/change-password` | V | Change own password (revokes other sessions) |
 | `GET /api/system/health` | V | Resources, limits, job queue, graph cache, database, warnings |
 | `GET /api/dashboard?snapshot_id=` | V | Headline statistics from imported data and the latest analysis |
